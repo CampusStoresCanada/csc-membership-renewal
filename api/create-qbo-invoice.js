@@ -474,7 +474,7 @@ function formatLineItems(invoiceData, billingPreferences, organizationData) {
       DetailType: "SalesItemLineDetail",
       SalesItemLineDetail: {
         ItemRef: {
-          name: "Membership 2025-2026"
+          value: combinedItemId
         },
         Qty: 1,
         UnitPrice: membershipFee + conferenceTotal,
@@ -491,8 +491,7 @@ function formatLineItems(invoiceData, billingPreferences, organizationData) {
       DetailType: "SalesItemLineDetail",
       SalesItemLineDetail: {
         ItemRef: {
-          value: membershipItemId,
-          name: `Membership 2025-2026 - ${institutionSize}`
+          value: membershipItemId
         },
         Qty: 1,
         UnitPrice: membershipFee
@@ -506,8 +505,7 @@ function formatLineItems(invoiceData, billingPreferences, organizationData) {
         DetailType: "SalesItemLineDetail",
         SalesItemLineDetail: {
           ItemRef: {
-            value: conferenceItemId,
-            name: "Conference Registration Member"
+            value: conferenceItemId
           },
           Qty: 1,
           UnitPrice: conferenceTotal + conferenceHST
@@ -521,8 +519,7 @@ function formatLineItems(invoiceData, billingPreferences, organizationData) {
       DetailType: "SalesItemLineDetail",
       SalesItemLineDetail: {
         ItemRef: {
-          value: membershipItemId,
-          name: `Membership 2025-2026 - ${institutionSize}`
+          value: membershipItemId
         },
         Qty: 1,
         UnitPrice: membershipFee
@@ -535,8 +532,7 @@ function formatLineItems(invoiceData, billingPreferences, organizationData) {
         DetailType: "SalesItemLineDetail",
         SalesItemLineDetail: {
           ItemRef: {
-            value: conferenceItemId,
-            name: "Conference Registration Member"
+            value: conferenceItemId
           },
           Qty: invoiceData.attendingCount || 1,
           UnitPrice: conferenceTotal / (invoiceData.attendingCount || 1)
@@ -550,8 +546,7 @@ function formatLineItems(invoiceData, billingPreferences, organizationData) {
         DetailType: "SalesItemLineDetail",
         SalesItemLineDetail: {
           ItemRef: {
-            value: conferenceItemId,
-            name: "Conference HST (13%)"
+            value: conferenceItemId
           },
           Qty: 1,
           UnitPrice: conferenceHST
