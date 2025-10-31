@@ -442,7 +442,7 @@ function formatLineItems(invoiceData, billingPreferences, organizationData) {
     'New Brunswick': '8',      // HST NB 15%
     'Newfoundland': '12',      // HST NL 15%
     'Newfoundland and Labrador': '12',  // HST NL 15%
-    'Nova Scotia': '8',        // HST NS 15% (same rate as NB)
+    'Nova Scotia': '10',       // HST NS 14% (as of April 1, 2025)
     'Prince Edward Island': '8', // HST PEI 15%
     // All other provinces/territories: GST 5% (BC, AB, SK, MB, QC, YT, NT, NU)
   };

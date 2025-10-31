@@ -1233,8 +1233,9 @@
             const membershipFee = membershipPricing[institutionSize] || 0;
             const conferenceCosts = calculateConferenceCosts();
             const { totalAttendees, paidAttendees, freeAttendees, conferenceTotal, conferenceHST, attendeeBreakdown } = conferenceCosts;
+            const membershipTax = calculateMembershipTax(membershipFee);
             const subtotal = membershipFee + conferenceTotal;
-            const totalWithHST = membershipFee + conferenceTotal + conferenceHST;
+            const totalWithTax = membershipFee + membershipTax.taxAmount + conferenceTotal + conferenceHST;
 
             // Get organization info from form state
             const orgName = formState.institutionName || 'Organization Name';
@@ -1292,6 +1293,17 @@
                     `;
                 }
 
+                // Show membership tax
+                if (membershipTax.taxAmount > 0) {
+                    lineItems += `
+                    <tr>
+                        <td class="desc-col">${membershipTax.taxLabel}</td>
+                        <td class="amount-col">C$${membershipTax.taxAmount.toFixed(2)}</td>
+                    </tr>
+                    `;
+                }
+
+                // Show conference tax
                 if (conferenceHST > 0) {
                     lineItems += `
                     <tr>
@@ -3029,6 +3041,35 @@
                 conferenceTotal,
                 conferenceHST,
                 attendeeBreakdown
+            };
+        }
+
+        // Calculate membership tax based on province
+        function calculateMembershipTax(membershipFee) {
+            const province = formState.address?.province || window.organizationData?.organization?.address?.province || '';
+
+            // Tax rates by province (memberships)
+            const provinceTaxRates = {
+                'Ontario': 0.13,           // HST 13%
+                'New Brunswick': 0.15,     // HST 15%
+                'Newfoundland': 0.15,      // HST 15%
+                'Newfoundland and Labrador': 0.15,  // HST 15%
+                'Nova Scotia': 0.14,       // HST 14% (as of April 1, 2025)
+                'Prince Edward Island': 0.15, // HST 15%
+                // All other provinces: GST 5%
+            };
+
+            const taxRate = provinceTaxRates[province] || 0.05; // Default to GST 5%
+            const taxAmount = membershipFee * taxRate;
+            const taxName = provinceTaxRates[province] ? 'HST' : 'GST';
+            const taxPercent = (taxRate * 100).toFixed(0);
+
+            return {
+                taxAmount,
+                taxRate,
+                taxName,
+                taxPercent,
+                taxLabel: `${taxName} (${taxPercent}%)`
             };
         }
 
