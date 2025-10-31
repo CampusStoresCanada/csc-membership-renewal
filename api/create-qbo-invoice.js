@@ -488,7 +488,7 @@ function formatLineItems(invoiceData, billingPreferences, organizationData) {
           value: 'NON'  // Tax exempt - bookkeeper will split manually
         }
       },
-      Description: `Membership: $${membershipFee} + tax ($${membershipTax.toFixed(2)}), Conference: $${conferenceTotal} + tax ($${conferenceTax.toFixed(2)})`
+      Description: `2025-2026 Membership and Conference Registration (taxes included)`
     });
   } else if (billingDisplay === 'membership-conference') {
     // Membership line - use size-specific item
