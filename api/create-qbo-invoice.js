@@ -494,7 +494,10 @@ function formatLineItems(invoiceData, billingPreferences, organizationData) {
           value: membershipItemId
         },
         Qty: 1,
-        UnitPrice: membershipFee
+        UnitPrice: membershipFee,
+        TaxCodeRef: {
+          value: membershipTaxCode
+        }
       }
     });
 
@@ -512,7 +515,10 @@ function formatLineItems(invoiceData, billingPreferences, organizationData) {
             value: conferenceItemId
           },
           Qty: totalAttendees,
-          UnitPrice: pricePerAttendee
+          UnitPrice: pricePerAttendee,
+          TaxCodeRef: {
+            value: conferenceTaxCode
+          }
         }
       });
     }
