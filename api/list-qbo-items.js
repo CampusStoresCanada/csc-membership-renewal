@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     console.log('📋 Fetching QuickBooks items...');
 
     // Query all items
-    const query = "SELECT * FROM Item WHERE Type = 'Service' OR Type = 'NonInventory' MAXRESULTS 100";
+    const query = "SELECT * FROM Item WHERE Type IN ('Service', 'NonInventory') MAXRESULTS 100";
     const response = await fetch(
       `${qboBaseUrl}/v3/company/${qboCompanyId}/query?query=${encodeURIComponent(query)}&minorversion=65`,
       {
