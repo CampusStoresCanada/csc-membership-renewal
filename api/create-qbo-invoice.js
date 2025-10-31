@@ -392,7 +392,9 @@ async function createInvoice(customer, invoiceData, billingPreferences, organiza
     PrivateNote: `CSC Membership Renewal - Generated automatically`,
     CustomerMemo: {
       value: "Thank you for your CSC membership renewal!"
-    }
+    },
+    AllowOnlineCreditCardPayment: true,
+    AllowOnlineACHPayment: true
   };
 
   console.log('📄 Creating invoice with line items:', lineItems.length);
@@ -436,14 +438,14 @@ function formatLineItems(invoiceData, billingPreferences, organizationData) {
 
   console.log('🔍 formatLineItems called with billingDisplay:', billingDisplay, 'province:', province);
 
-  // Map province to tax code ID
+  // Map province to QuickBooks tax code ID
   const provinceTaxMap = {
     'Ontario': '13',           // HST ON 13%
-    'New Brunswick': '8',      // HST NB 15%
-    'Newfoundland': '12',      // HST NL 15%
-    'Newfoundland and Labrador': '12',  // HST NL 15%
-    'Nova Scotia': '10',       // HST NS 14% (as of April 1, 2025)
-    'Prince Edward Island': '8', // HST PEI 15%
+    'New Brunswick': '8',      // HST NB 2016 (15%)
+    'Newfoundland': '12',      // HST NL 2016 (15%)
+    'Newfoundland and Labrador': '12',  // HST NL 2016 (15%)
+    'Nova Scotia': '10',       // HST NS 2025 (14%)
+    'Prince Edward Island': '8', // Use NB code for PEI (15%)
     // All other provinces/territories: GST 5% (BC, AB, SK, MB, QC, YT, NT, NU)
   };
 
@@ -485,7 +487,7 @@ function formatLineItems(invoiceData, billingPreferences, organizationData) {
         Qty: 1,
         UnitPrice: totalWithTax,
         TaxCodeRef: {
-          value: 'NON'  // Tax exempt - bookkeeper will split manually
+          value: '4'  // Tax exempt (Exempt code from QB) - bookkeeper will split manually
         }
       },
       Description: `2025-2026 Membership and Conference Registration (taxes included)`
