@@ -450,20 +450,20 @@ function formatLineItems(invoiceData, billingPreferences, organizationData) {
   const membershipTaxCode = provinceTaxMap[province] || '3'; // Default to GST (5%)
   const conferenceTaxCode = '13'; // Always HST ON (13%) - event in Ontario
 
-  // Map institution size to QuickBooks Item IDs
+  // Map institution size to QuickBooks Item IDs (ACTUAL API IDs, not UI IDs)
   const membershipItemMap = {
-    'Xsmall': '200000304',
-    'Small': '200000404',
-    'Medium': '200000309',
-    'Large': '200000205',
-    'Xlarge': '200000210'
+    'XSmall': '4',
+    'Small': '5',
+    'Medium': '6',
+    'Large': '7',
+    'XLarge': '8'
   };
 
-  const conferenceItemId = '200000504'; // Conference Registration Member
-  const combinedItemId = '200000312'; // Membership 2025-2026 (flexible pricing)
+  const conferenceItemId = '9'; // Conference 26 Registration
+  const combinedItemId = '10'; // Membership 2025-2026 (flexible pricing)
 
   // Get the correct membership item ID based on institution size
-  const membershipItemId = membershipItemMap[institutionSize] || '200000404'; // Default to Small if not found
+  const membershipItemId = membershipItemMap[institutionSize] || '5'; // Default to Small if not found
 
   if (billingDisplay === 'single-item') {
     // Single line item with combined total - use flexible pricing item
