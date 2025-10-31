@@ -1069,6 +1069,11 @@
                     <div class="invoice-subtotal">
                         Subtotal: $${subtotal.toFixed(2)}
                     </div>
+                    ${membershipTax.taxAmount > 0 ? `
+                        <div class="invoice-tax">
+                            ${membershipTax.taxLabel}: $${membershipTax.taxAmount.toFixed(2)}
+                        </div>
+                    ` : ''}
                     ${conferenceHST > 0 ? `
                         <div class="invoice-tax">
                             HST (13%): $${conferenceHST.toFixed(2)}
@@ -1105,6 +1110,11 @@
                     <div class="invoice-subtotal">
                         Subtotal: $${subtotal.toFixed(2)}
                     </div>
+                    ${membershipTax.taxAmount > 0 ? `
+                        <div class="invoice-tax">
+                            ${membershipTax.taxLabel}: $${membershipTax.taxAmount.toFixed(2)}
+                        </div>
+                    ` : ''}
                     ${conferenceHST > 0 ? `
                         <div class="invoice-tax">
                             HST (13%): $${conferenceHST.toFixed(2)}

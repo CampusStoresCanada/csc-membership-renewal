@@ -529,7 +529,7 @@ function formatLineItems(invoiceData, billingPreferences, organizationData) {
       });
     }
   } else {
-    // Individual line items
+    // Individual line items - show each attendee separately with proper tax codes
     lines.push({
       Amount: membershipFee,
       DetailType: "SalesItemLineDetail",
@@ -538,11 +538,18 @@ function formatLineItems(invoiceData, billingPreferences, organizationData) {
           value: membershipItemId
         },
         Qty: 1,
-        UnitPrice: membershipFee
+        UnitPrice: membershipFee,
+        TaxCodeRef: {
+          value: membershipTaxCode
+        }
       }
     });
 
+    // Add individual conference registration lines (one per paid attendee)
     if (conferenceTotal > 0) {
+      const paidAttendees = invoiceData.paidAttendees || 1;
+      const pricePerAttendee = 324.99;
+
       lines.push({
         Amount: conferenceTotal,
         DetailType: "SalesItemLineDetail",
@@ -550,22 +557,11 @@ function formatLineItems(invoiceData, billingPreferences, organizationData) {
           ItemRef: {
             value: conferenceItemId
           },
-          Qty: invoiceData.attendingCount || 1,
-          UnitPrice: conferenceTotal / (invoiceData.attendingCount || 1)
-        }
-      });
-    }
-
-    if (conferenceHST > 0) {
-      lines.push({
-        Amount: conferenceHST,
-        DetailType: "SalesItemLineDetail",
-        SalesItemLineDetail: {
-          ItemRef: {
-            value: conferenceItemId
-          },
-          Qty: 1,
-          UnitPrice: conferenceHST
+          Qty: paidAttendees,
+          UnitPrice: pricePerAttendee,
+          TaxCodeRef: {
+            value: conferenceTaxCode
+          }
         }
       });
     }
