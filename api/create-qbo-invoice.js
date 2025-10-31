@@ -498,17 +498,21 @@ function formatLineItems(invoiceData, billingPreferences, organizationData) {
       }
     });
 
-    // Conference line (with HST included)
-    if (conferenceTotal + conferenceHST > 0) {
+    // Conference line - show quantity of registrants × price per registrant
+    // QuickBooks will add HST automatically, so we only pass the pre-tax amount
+    if (conferenceTotal > 0) {
+      const totalAttendees = invoiceData.paidAttendees || 1;
+      const pricePerAttendee = 324.99; // Conference registration price
+
       lines.push({
-        Amount: conferenceTotal + conferenceHST,
+        Amount: conferenceTotal,
         DetailType: "SalesItemLineDetail",
         SalesItemLineDetail: {
           ItemRef: {
             value: conferenceItemId
           },
-          Qty: 1,
-          UnitPrice: conferenceTotal + conferenceHST
+          Qty: totalAttendees,
+          UnitPrice: pricePerAttendee
         }
       });
     }

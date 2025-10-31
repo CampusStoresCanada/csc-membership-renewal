@@ -1026,7 +1026,7 @@
                 'XLarge': 1000
             };
 
-            const conferencePerPerson = 325;
+            const conferencePerPerson = 324.99;
             const hstRate = 0.13; // Ontario HST
 
             // Get current selections
@@ -1223,7 +1223,7 @@
                 'XSmall': 420, 'Small': 525, 'Medium': 735, 'Large': 895, 'XLarge': 1000
             };
 
-            const conferencePerPerson = 325;
+            const conferencePerPerson = 324.99;
             const hstRate = 0.13;
 
             const institutionSize = formState.institutionSize;
@@ -2938,7 +2938,7 @@
             if (!organizationContacts || organizationContacts.length === 0) {
                 console.log('⚠️ organizationContacts not loaded, using basic calculation');
                 const totalAttendees = teamState.attendingContacts.size || 0;
-                const conferencePerPerson = 325;
+                const conferencePerPerson = 324.99;
                 const conferenceTotal = totalAttendees * conferencePerPerson;
                 const conferenceHST = conferenceTotal * 0.13;
 
@@ -3015,7 +3015,7 @@
                 }
             });
 
-            const conferencePerPerson = 325;
+            const conferencePerPerson = 324.99;
             const conferenceTotal = paidAttendees * conferencePerPerson;
             const conferenceHST = conferenceTotal * 0.13;
 
