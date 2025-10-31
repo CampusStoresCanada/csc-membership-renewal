@@ -466,23 +466,29 @@ function formatLineItems(invoiceData, billingPreferences, organizationData) {
   const membershipItemId = membershipItemMap[institutionSize] || '5'; // Default to Small if not found
 
   if (billingDisplay === 'single-item') {
-    // Single line item with combined total - use flexible pricing item
-    // Use conference tax code since conference always has tax
-    // Total is membershipFee + conferenceTotal (QB will add tax)
+    // Single line item with combined total - TAX EXEMPT
+    // Can't apply multiple tax rates to a single line, so mark as tax-exempt
+    // Bookkeeper will manually split revenue using the breakdown email
+    // Total includes both membership + conference + all applicable taxes
+    const membershipTaxRate = provinceTaxMap[province] ? provinceTaxMap[province] === '13' ? 0.13 : provinceTaxMap[province] === '8' ? 0.15 : provinceTaxMap[province] === '12' ? 0.15 : provinceTaxMap[province] === '10' ? 0.14 : 0.05 : 0.05;
+    const membershipTax = membershipFee * membershipTaxRate;
+    const conferenceTax = conferenceTotal * 0.13;
+    const totalWithTax = membershipFee + membershipTax + conferenceTotal + conferenceTax;
+
     lines.push({
-      Amount: membershipFee + conferenceTotal,
+      Amount: totalWithTax,
       DetailType: "SalesItemLineDetail",
       SalesItemLineDetail: {
         ItemRef: {
           value: combinedItemId
         },
         Qty: 1,
-        UnitPrice: membershipFee + conferenceTotal,
+        UnitPrice: totalWithTax,
         TaxCodeRef: {
-          value: conferenceTaxCode  // HST ON (13%) - conference determines tax
+          value: 'NON'  // Tax exempt - bookkeeper will split manually
         }
       },
-      Description: `Membership: $${membershipFee}, Conference: $${conferenceTotal} + tax`
+      Description: `Membership: $${membershipFee} + tax ($${membershipTax.toFixed(2)}), Conference: $${conferenceTotal} + tax ($${conferenceTax.toFixed(2)})`
     });
   } else if (billingDisplay === 'membership-conference') {
     // Membership line - use size-specific item

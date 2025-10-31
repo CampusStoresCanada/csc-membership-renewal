@@ -174,17 +174,33 @@ export async function sendBookkeeperNotification(invoiceDetails) {
   body += `========================================\n\n`;
 
   if (billingDisplay === 'single-item') {
-    body += `⚠️ CODING REQUIRED - SINGLE LINE ITEM INVOICE\n`;
-    body += `This invoice was billed as a single line item in QuickBooks.\n`;
-    body += `Revenue must be split manually using the breakdown below.\n\n`;
+    // Calculate taxes separately for membership and conference
+    const province = customerAddress?.province || '';
+    const provinceTaxRates = {
+      'Ontario': 0.13, 'New Brunswick': 0.15, 'Newfoundland': 0.15,
+      'Newfoundland and Labrador': 0.15, 'Nova Scotia': 0.14, 'Prince Edward Island': 0.15
+    };
+    const membershipTaxRate = provinceTaxRates[province] || 0.05;
+    const membershipTax = membershipFee * membershipTaxRate;
+    const conferenceTax = conferenceTotal * 0.13;
+    const membershipTaxName = provinceTaxRates[province] ? 'HST' : 'GST';
+    const membershipTaxPercent = (membershipTaxRate * 100).toFixed(0);
+
+    body += `⚠️ CODING REQUIRED - SINGLE LINE ITEM INVOICE (TAX EXEMPT)\n`;
+    body += `This invoice was billed as a single TAX-EXEMPT line in QuickBooks.\n`;
+    body += `Revenue AND taxes must be split manually using the breakdown below.\n\n`;
 
     body += `REVENUE ALLOCATION:\n`;
     body += `-------------------\n`;
     body += `Account ${membershipAccount}: Membership ${institutionSize}\n`;
-    body += `  Amount: $${membershipFee.toFixed(2)}\n\n`;
+    body += `  Pre-tax Amount: $${membershipFee.toFixed(2)}\n`;
+    body += `  ${membershipTaxName} (${membershipTaxPercent}%): $${membershipTax.toFixed(2)}\n`;
+    body += `  Total with tax: $${(membershipFee + membershipTax).toFixed(2)}\n\n`;
 
     body += `Account 4210: Conference - Delegate Reg\n`;
-    body += `  Amount: $${conferenceTotal.toFixed(2)}\n`;
+    body += `  Pre-tax Amount: $${conferenceTotal.toFixed(2)}\n`;
+    body += `  HST (13%): $${conferenceTax.toFixed(2)}\n`;
+    body += `  Total with tax: $${(conferenceTotal + conferenceTax).toFixed(2)}\n`;
     body += `  Attendees: ${conferenceAttendees.paid} paid, ${conferenceAttendees.free} complimentary\n\n`;
 
     if (conferenceAttendees.breakdown && conferenceAttendees.breakdown.length > 0) {
@@ -196,14 +212,16 @@ export async function sendBookkeeperNotification(invoiceDetails) {
       body += `\n`;
     }
 
-    body += `Tax (HST): $${conferenceHST.toFixed(2)}\n`;
-    body += `  (Included in QB invoice total)\n\n`;
+    body += `TOTAL INVOICE AMOUNT: $${(membershipFee + membershipTax + conferenceTotal + conferenceTax).toFixed(2)}\n`;
+    body += `  (Marked as tax-exempt in QuickBooks - taxes included in line total)\n\n`;
 
     body += `JOURNAL ENTRY NEEDED:\n`;
     body += `-------------------\n`;
-    body += `Dr. Account 4110 (Combined Revenue): $${(membershipFee + conferenceTotal).toFixed(2)}\n`;
+    body += `Dr. Account 4110 (Combined Revenue): $${(membershipFee + membershipTax + conferenceTotal + conferenceTax).toFixed(2)}\n`;
     body += `Cr. Account ${membershipAccount} (Membership): $${membershipFee.toFixed(2)}\n`;
-    body += `Cr. Account 4210 (Conference): $${conferenceTotal.toFixed(2)}\n\n`;
+    body += `Cr. Account 4210 (Conference): $${conferenceTotal.toFixed(2)}\n`;
+    body += `Cr. GST/HST Payable (Membership ${membershipTaxName}): $${membershipTax.toFixed(2)}\n`;
+    body += `Cr. GST/HST Payable (Conference HST): $${conferenceTax.toFixed(2)}\n\n`;
 
   } else {
     body += `✓ NO CODING REQUIRED - LINE ITEMS SEPARATED\n`;
