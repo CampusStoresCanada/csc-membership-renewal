@@ -1037,8 +1037,9 @@
             const membershipFee = membershipPricing[institutionSize] || 0;
             const conferenceCosts = calculateConferenceCosts();
             const { totalAttendees, paidAttendees, freeAttendees, conferenceTotal, conferenceHST, attendeeBreakdown } = conferenceCosts;
+            const membershipTax = calculateMembershipTax(membershipFee);
             const subtotal = membershipFee + conferenceTotal;
-            const totalWithHST = membershipFee + conferenceTotal + conferenceHST;
+            const totalWithTax = membershipFee + membershipTax.taxAmount + conferenceTotal + conferenceHST;
 
             // Generate preview based on billing display choice
             let preview = '<div class="invoice-preview"><div class="hover-overlay">Click to confirm details</div>';
@@ -1049,10 +1050,10 @@
                 preview += `
                     <div class="invoice-line-item">
                         <span class="item-description">2025-2026 CSC Membership</span>
-                        <span class="item-amount">$${totalWithHST.toFixed(2)}</span>
+                        <span class="item-amount">$${totalWithTax.toFixed(2)}</span>
                     </div>
                     <div class="invoice-total">
-                        <strong>Total: $${totalWithHST.toFixed(2)}</strong>
+                        <strong>Total: $${totalWithTax.toFixed(2)}</strong>
                     </div>
                 `;
             } else if (billingDisplay === 'membership-conference') {
@@ -1074,7 +1075,7 @@
                         </div>
                     ` : ''}
                     <div class="invoice-total">
-                        <strong>Total: $${totalWithHST.toFixed(2)}</strong>
+                        <strong>Total: $${totalWithTax.toFixed(2)}</strong>
                     </div>
                 `;
             } else if (billingDisplay === 'individual-line-items') {
@@ -1110,7 +1111,7 @@
                         </div>
                     ` : ''}
                     <div class="invoice-total">
-                        <strong>Total: $${totalWithHST.toFixed(2)}</strong>
+                        <strong>Total: $${totalWithTax.toFixed(2)}</strong>
                     </div>
                 `;
             } else {
@@ -1271,7 +1272,7 @@
                 lineItems = `
                     <tr>
                         <td class="desc-col">2025-2026 CSC Membership</td>
-                        <td class="amount-col">C$${totalWithHST.toFixed(2)}</td>
+                        <td class="amount-col">C$${totalWithTax.toFixed(2)}</td>
                     </tr>
                 `;
             } else if (billingDisplay === 'membership-conference') {
@@ -1392,12 +1393,12 @@
 
                     <div class="invoice-total">
                         <div class="total-line">
-                            <strong>Total: C$${totalWithHST.toFixed(2)}</strong>
+                            <strong>Total: C$${totalWithTax.toFixed(2)}</strong>
                         </div>
                     </div>
 
                     <div class="amount-due">
-                        <strong>C$${totalWithHST.toFixed(2)} due ${dueDate}</strong>
+                        <strong>C$${totalWithTax.toFixed(2)} due ${dueDate}</strong>
                     </div>
 
                     <div class="invoice-footer">
@@ -3086,8 +3087,9 @@
 
             const membershipFee = membershipPricing[formState.institutionSize] || 0;
             const conferenceCosts = calculateConferenceCosts();
+            const membershipTax = calculateMembershipTax(membershipFee);
 
-            return (membershipFee + conferenceCosts.conferenceTotal + conferenceCosts.conferenceHST).toFixed(2);
+            return (membershipFee + membershipTax.taxAmount + conferenceCosts.conferenceTotal + conferenceCosts.conferenceHST).toFixed(2);
         }
 
 
