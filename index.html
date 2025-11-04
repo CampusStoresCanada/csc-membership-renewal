@@ -1549,12 +1549,20 @@
                 }
 
                 // Store Stripe checkout URL for payment
+                console.log('🔍 DEBUG: Storing Stripe URL - stripeResult:', stripeResult);
                 if (stripeResult && stripeResult.checkoutUrl) {
                     window.stripeCheckoutUrl = stripeResult.checkoutUrl;
-                    console.log('💳 Stripe checkout ready');
-                } else if (!qboResult || !qboResult.paymentLink) {
-                    // If BOTH Stripe and QB failed, throw error
-                    throw new Error('Unable to create payment checkout. Please try again or contact support.');
+                    console.log('✅ STRIPE CHECKOUT URL STORED:', window.stripeCheckoutUrl);
+                } else {
+                    console.log('⚠️ No Stripe checkout URL in result:', {
+                        hasStripeResult: !!stripeResult,
+                        hasCheckoutUrl: stripeResult?.checkoutUrl
+                    });
+
+                    if (!qboResult || !qboResult.paymentLink) {
+                        // If BOTH Stripe and QB failed, throw error
+                        throw new Error('Unable to create payment checkout. Please try again or contact support.');
+                    }
                 }
 
                 // Enable next step button
@@ -1568,15 +1576,21 @@
                 closeInvoiceModal();
 
                 // Open Stripe checkout for payment (QB invoice is for bookkeeping only)
+                console.log('🔍 DEBUG: Payment URL selection:');
+                console.log('  - Stripe URL:', window.stripeCheckoutUrl || 'NOT SET');
+                console.log('  - QB URL:', window.qboInvoiceUrl || 'NOT SET');
+
                 if (window.stripeCheckoutUrl) {
-                    console.log('💳 Opening Stripe checkout in new tab');
+                    console.log('✅ OPENING STRIPE CHECKOUT:', window.stripeCheckoutUrl);
                     window.open(window.stripeCheckoutUrl, '_blank');
                 } else {
                     console.error('❌ No Stripe checkout URL available');
                     // Fallback to QB if Stripe failed
                     if (window.qboInvoiceUrl) {
-                        console.log('⚠️ Falling back to QuickBooks payment link');
+                        console.log('⚠️ OPENING QB FALLBACK:', window.qboInvoiceUrl);
                         window.open(window.qboInvoiceUrl, '_blank');
+                    } else {
+                        console.error('❌ NO PAYMENT URLS AVAILABLE AT ALL!');
                     }
                 }
 
@@ -1860,6 +1874,12 @@
                 }
 
                 console.log('✅ Stripe checkout session created:', result);
+                console.log('🔍 DEBUG: Stripe result structure:', {
+                    success: result.success,
+                    hasCheckoutUrl: !!result.checkoutUrl,
+                    checkoutUrl: result.checkoutUrl,
+                    sessionId: result.sessionId
+                });
 
                 // Store Stripe info for potential future use
                 window.stripeCheckoutResult = result;
