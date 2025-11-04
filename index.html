@@ -1440,20 +1440,20 @@
                 actions = modal.querySelector('.invoice-modal-actions');
                 if (actions) {
                     actions.innerHTML = `
-                        <div style="padding: 24px; text-align: center;">
-                            <h3 style="margin: 0 0 16px; color: #333;">How would you like to pay?</h3>
-                            <p style="margin: 0 0 24px; color: #666; font-size: 14px;">
+                        <div style="padding: 16px; text-align: center; width: 100%; box-sizing: border-box;">
+                            <h3 style="margin: 0 0 12px; color: #333; font-size: 18px;">How would you like to pay?</h3>
+                            <p style="margin: 0 0 20px; color: #666; font-size: 14px;">
                                 Choose your preferred payment method below.
                             </p>
-                            <div style="display: flex; gap: 12px; justify-content: center;">
-                                <button onclick="processPayment('card')" class="next-btn primary" style="flex: 1; max-width: 200px;">
+                            <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 400px; margin: 0 auto;">
+                                <button onclick="processPayment('card')" class="next-btn primary" style="width: 100%; padding: 12px 24px; font-size: 16px;">
                                     💳 Pay with Card
                                 </button>
-                                <button onclick="processPayment('invoice')" class="next-btn secondary" style="flex: 1; max-width: 200px;">
+                                <button onclick="processPayment('invoice')" class="next-btn secondary" style="width: 100%; padding: 12px 24px; font-size: 16px;">
                                     📄 Pay by Invoice
                                 </button>
                             </div>
-                            <p style="margin: 24px 0 0; color: #999; font-size: 12px;">
+                            <p style="margin: 20px 0 0; color: #999; font-size: 12px;">
                                 Invoice payment allows check, wire transfer, or other payment methods.
                             </p>
                         </div>
