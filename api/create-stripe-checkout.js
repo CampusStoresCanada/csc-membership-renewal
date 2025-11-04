@@ -157,6 +157,7 @@ function buildStripeLineItems(invoiceData, billingPreferences, organizationData)
         currency: 'cad',
         product: combinedProductId,
         unit_amount: Math.round(totalBeforeTax * 100), // Convert to cents
+        tax_behavior: 'exclusive' // Required for automatic_tax
       },
       quantity: 1
     });
@@ -171,6 +172,7 @@ function buildStripeLineItems(invoiceData, billingPreferences, organizationData)
         currency: 'cad',
         product: membershipProductId,
         unit_amount: Math.round(membershipFee * 100),
+        tax_behavior: 'exclusive'
       },
       quantity: 1
     });
@@ -182,6 +184,7 @@ function buildStripeLineItems(invoiceData, billingPreferences, organizationData)
           currency: 'cad',
           product: conferenceProductId,
           unit_amount: Math.round((conferenceTotal / paidAttendees) * 100), // Per attendee
+          tax_behavior: 'exclusive'
         },
         quantity: paidAttendees
       });
@@ -199,6 +202,7 @@ function buildStripeLineItems(invoiceData, billingPreferences, organizationData)
         currency: 'cad',
         product: membershipProductId,
         unit_amount: Math.round(membershipFee * 100),
+        tax_behavior: 'exclusive'
       },
       quantity: 1
     });
@@ -215,7 +219,8 @@ function buildStripeLineItems(invoiceData, billingPreferences, organizationData)
           price_data: {
             currency: 'cad',
             product: conferenceProductId,
-            unit_amount: Math.round(attendeeFee * 100)
+            unit_amount: Math.round(attendeeFee * 100),
+            tax_behavior: 'exclusive'
           },
           quantity: 1
           // Note: Attendee name will show in metadata/receipt, not per-line-item
