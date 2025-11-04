@@ -601,17 +601,17 @@
                             </p>
 
                             <!-- Payment Options -->
-                            <div style="margin: 32px auto; max-width: 400px;">
-                                <div id="stripePaymentButton" style="margin-bottom: 16px;">
-                                    <button onclick="openStripePayment()" class="next-btn primary" style="width: 100%; padding: 16px; font-size: 16px;">
-                                        💳 Pay with Card
-                                    </button>
+                            <div style="margin: 32px auto; max-width: 600px; display: flex; gap: 20px;">
+                                <div id="stripePaymentButton" onclick="openStripePayment()" style="flex: 1; background: white; border: 2px solid #0071bc; border-radius: 12px; padding: 32px 24px; cursor: pointer; transition: all 0.2s; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 16px rgba(0,113,188,0.2)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)';">
+                                    <div style="font-size: 56px; margin-bottom: 16px;">💳</div>
+                                    <div style="font-weight: 600; font-size: 20px; color: #0071bc; margin-bottom: 8px;">Pay with Card</div>
+                                    <div style="font-size: 14px; color: #666;">Instant payment</div>
                                 </div>
 
-                                <div id="qboPaymentButton">
-                                    <button onclick="openQBOInvoice()" class="next-btn secondary" style="width: 100%; padding: 16px; font-size: 16px;">
-                                        📄 View Invoice
-                                    </button>
+                                <div id="qboPaymentButton" onclick="openQBOInvoice()" style="flex: 1; background: white; border: 2px solid #666; border-radius: 12px; padding: 32px 24px; cursor: pointer; transition: all 0.2s; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)';">
+                                    <div style="font-size: 56px; margin-bottom: 16px;">📄</div>
+                                    <div style="font-weight: 600; font-size: 20px; color: #333; margin-bottom: 8px;">View Invoice</div>
+                                    <div style="font-size: 14px; color: #666;">Check, wire, or online</div>
                                 </div>
                             </div>
 
