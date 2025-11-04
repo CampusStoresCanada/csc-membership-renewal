@@ -217,8 +217,8 @@ function buildStripeLineItems(invoiceData, billingPreferences, organizationData)
             product: conferenceProductId,
             unit_amount: Math.round(attendeeFee * 100)
           },
-          quantity: 1,
-          description: attendee.name // Show attendee name in description instead
+          quantity: 1
+          // Note: Attendee name will show in metadata/receipt, not per-line-item
         });
       });
     } else {
