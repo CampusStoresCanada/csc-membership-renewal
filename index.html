@@ -597,41 +597,26 @@
                                 Membership Renewal Submitted!
                             </h1>
                             <p class="welcome-text">
-                                Your CSC membership renewal is ready. Please complete your payment to finalize your renewal for the 2025-2026 year.
+                                Your renewal is ready. Choose how you'd like to pay:
                             </p>
 
                             <!-- Payment Options -->
-                            <div style="background: #f8f9fa; padding: 24px; border-radius: 8px; margin: 24px 0; max-width: 500px; margin-left: auto; margin-right: auto;">
-                                <h3 style="margin: 0 0 16px; color: #333; font-size: 20px;">Choose Your Payment Method</h3>
-
-                                <div id="stripePaymentButton" style="display: none; margin-bottom: 12px;">
+                            <div style="margin: 32px auto; max-width: 400px;">
+                                <div id="stripePaymentButton" style="display: none; margin-bottom: 16px;">
                                     <button onclick="openStripePayment()" class="next-btn primary" style="width: 100%; padding: 16px; font-size: 16px;">
-                                        💳 Pay with Card (Stripe)
+                                        💳 Pay with Card
                                     </button>
-                                    <p style="margin: 8px 0 0; font-size: 13px; color: #666;">Instant payment via credit card</p>
                                 </div>
 
                                 <div id="qboPaymentButton" style="display: none;">
                                     <button onclick="openQBOInvoice()" class="next-btn secondary" style="width: 100%; padding: 16px; font-size: 16px;">
-                                        📄 View Invoice (QuickBooks)
+                                        📄 View Invoice
                                     </button>
-                                    <p style="margin: 8px 0 0; font-size: 13px; color: #666;">Pay by check, wire transfer, or online invoice</p>
                                 </div>
                             </div>
 
-                            <p class="welcome-text">
-                                You'll receive email confirmations for both your payment and membership renewal.
-                                If you have any questions between 8:30 AM and 4:30 PM Mountain Time on a
-                                weekday, you can reach out to <a href="mailto:google@campusstores.ca" style="color: #0071bc;">Steve Thomas</a>.
-                            </p>
-                            <p class="welcome-text">
-                                <strong>What's next?</strong> Once payment is complete, your membership benefits will be active, including access to
-                                the conference (if selected) and all CSC member resources.
-                            </p>
-                            <p class="welcome-text">
-                                Thanks once again for choosing to support Campus Stores Canada,
-                                our members, and the more than 2 million students, faculty and
-                                staff represented by CSC.
+                            <p class="welcome-text" style="margin-top: 48px; font-size: 14px;">
+                                Questions? Contact <a href="mailto:google@campusstores.ca" style="color: #0071bc;">Steve Thomas</a> (8:30 AM - 4:30 PM MT, weekdays).
                             </p>
                         </div>
                         
@@ -4058,19 +4043,28 @@
             console.log('🚀 Step 6 (Results) initialized!');
 
             // Show payment buttons if URLs are available
+            console.log('🔍 Checking payment URLs:', {
+                stripe: window.stripeCheckoutUrl ? 'PRESENT' : 'MISSING',
+                qbo: window.qboInvoiceUrl ? 'PRESENT' : 'MISSING'
+            });
+
             if (window.stripeCheckoutUrl) {
                 const stripeButton = document.getElementById('stripePaymentButton');
+                console.log('💳 Stripe button element:', stripeButton);
                 if (stripeButton) {
                     stripeButton.style.display = 'block';
-                    console.log('💳 Stripe payment button shown');
+                    stripeButton.style.visibility = 'visible';
+                    console.log('✅ Stripe payment button shown');
                 }
             }
 
             if (window.qboInvoiceUrl) {
                 const qboButton = document.getElementById('qboPaymentButton');
+                console.log('📄 QB button element:', qboButton);
                 if (qboButton) {
                     qboButton.style.display = 'block';
-                    console.log('📄 QB invoice button shown');
+                    qboButton.style.visibility = 'visible';
+                    console.log('✅ QB invoice button shown');
                 }
             }
         }
