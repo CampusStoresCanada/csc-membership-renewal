@@ -158,8 +158,7 @@ function buildStripeLineItems(invoiceData, billingPreferences, organizationData)
         product: combinedProductId,
         unit_amount: Math.round(totalBeforeTax * 100), // Convert to cents
       },
-      quantity: 1,
-      tax_behavior: 'exclusive' // Tax calculated separately
+      quantity: 1
     });
 
   } else if (billingDisplay === 'membership-conference') {
@@ -173,8 +172,7 @@ function buildStripeLineItems(invoiceData, billingPreferences, organizationData)
         product: membershipProductId,
         unit_amount: Math.round(membershipFee * 100),
       },
-      quantity: 1,
-      tax_behavior: 'exclusive'
+      quantity: 1
     });
 
     // Conference line (if there are attendees)
@@ -185,8 +183,7 @@ function buildStripeLineItems(invoiceData, billingPreferences, organizationData)
           product: conferenceProductId,
           unit_amount: Math.round((conferenceTotal / paidAttendees) * 100), // Per attendee
         },
-        quantity: paidAttendees,
-        tax_behavior: 'exclusive'
+        quantity: paidAttendees
       });
     }
 
@@ -203,8 +200,7 @@ function buildStripeLineItems(invoiceData, billingPreferences, organizationData)
         product: membershipProductId,
         unit_amount: Math.round(membershipFee * 100),
       },
-      quantity: 1,
-      tax_behavior: 'exclusive'
+      quantity: 1
     });
 
     // Individual attendee lines
@@ -224,8 +220,7 @@ function buildStripeLineItems(invoiceData, billingPreferences, organizationData)
               name: `Conference Registration - ${attendee.name}`
             }
           },
-          quantity: 1,
-          tax_behavior: 'exclusive'
+          quantity: 1
         });
       });
     } else {
