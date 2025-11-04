@@ -1,8 +1,32 @@
 // api/auto-refresh-qb-tokens.js - Automatic QuickBooks token refresh with Vercel env updates
+// Store last refresh time in memory (resets on cold start, which is fine)
+let lastRefreshTime = null;
+const MINIMUM_REFRESH_INTERVAL = 55 * 60 * 1000; // 55 minutes in milliseconds
+
 export default async function handler(req, res) {
   // Allow both GET (for manual testing) and POST (for cron jobs)
   if (req.method !== 'GET' && req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+
+  // Check if we refreshed recently (prevent rapid-fire refreshes that kill tokens)
+  const now = Date.now();
+  if (lastRefreshTime && (now - lastRefreshTime) < MINIMUM_REFRESH_INTERVAL) {
+    const minutesSinceRefresh = Math.floor((now - lastRefreshTime) / 60000);
+    const minutesUntilNext = Math.ceil((MINIMUM_REFRESH_INTERVAL - (now - lastRefreshTime)) / 60000);
+
+    console.log(`⏸️ Skipping refresh - last refresh was ${minutesSinceRefresh} minutes ago`);
+    console.log(`⏰ Next refresh allowed in ${minutesUntilNext} minutes`);
+
+    res.status(200).json({
+      success: true,
+      skipped: true,
+      message: `Token refresh skipped - refreshed ${minutesSinceRefresh} minutes ago`,
+      last_refresh: new Date(lastRefreshTime).toISOString(),
+      next_refresh_allowed: new Date(lastRefreshTime + MINIMUM_REFRESH_INTERVAL).toISOString(),
+      minutes_until_next: minutesUntilNext
+    });
     return;
   }
 
@@ -130,6 +154,10 @@ export default async function handler(req, res) {
     }
 
     // Step 3: Success response
+    // Update last refresh time to prevent rapid-fire refreshes
+    lastRefreshTime = Date.now();
+    console.log('✅ Refresh successful - next refresh blocked for 55 minutes');
+
     const response = {
       success: true,
       message: 'QuickBooks tokens refreshed successfully',
@@ -137,6 +165,7 @@ export default async function handler(req, res) {
       expires_in: tokens.expires_in,
       expires_in_hours: Math.floor(tokens.expires_in / 3600),
       next_refresh_recommended: new Date(Date.now() + (tokens.expires_in - 10 * 60) * 1000).toISOString(), // 10 min before expiry
+      next_refresh_allowed: new Date(lastRefreshTime + MINIMUM_REFRESH_INTERVAL).toISOString(),
       vercel_update: {
         attempted: !!(vercelToken && vercelProjectId),
         success: vercelUpdateSuccess,

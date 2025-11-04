@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/auto-refresh-qb-tokens",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 * * * *"
     },
     {
       "path": "/api/poll-squarespace-delegates",
