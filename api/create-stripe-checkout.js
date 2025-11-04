@@ -214,13 +214,11 @@ function buildStripeLineItems(invoiceData, billingPreferences, organizationData)
         lineItems.push({
           price_data: {
             currency: 'cad',
-            unit_amount: Math.round(attendeeFee * 100),
-            product_data: {
-              name: `Conference Registration - ${attendee.name}`,
-              description: '2026 CSC Conference Registration'
-            }
+            product: conferenceProductId,
+            unit_amount: Math.round(attendeeFee * 100)
           },
-          quantity: 1
+          quantity: 1,
+          description: attendee.name // Show attendee name in description instead
         });
       });
     } else {
