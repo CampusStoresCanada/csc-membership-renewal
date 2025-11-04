@@ -214,10 +214,10 @@ function buildStripeLineItems(invoiceData, billingPreferences, organizationData)
         lineItems.push({
           price_data: {
             currency: 'cad',
-            product: conferenceProductId,
             unit_amount: Math.round(attendeeFee * 100),
             product_data: {
-              name: `Conference Registration - ${attendee.name}`
+              name: `Conference Registration - ${attendee.name}`,
+              description: '2026 CSC Conference Registration'
             }
           },
           quantity: 1
