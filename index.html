@@ -5055,7 +5055,9 @@
 
             } catch (error) {
                 console.error('❌ Background Notion sync failed:', error);
-                showCompletionMessage(true); // Show with error message
+                // Show success page anyway - payment links are ready, sync is secondary
+                console.log('⚠️ Showing payment page despite sync error - invoices were created successfully');
+                showCompletionMessage(false);
             }
         }
 
