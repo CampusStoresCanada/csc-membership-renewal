@@ -5062,9 +5062,25 @@
 
             } catch (error) {
                 console.error('❌ Background Notion sync failed:', error);
-                // Show success page anyway - payment links are ready, sync is secondary
-                console.log('⚠️ Showing payment page despite sync error - invoices were created successfully');
-                showCompletionMessage(false);
+
+                // Send alert notification to bookkeeper
+                try {
+                    await fetch('/api/send-error-notification', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            error: error.message,
+                            details: error.stack,
+                            organizationName: formState.institutionName,
+                            timestamp: new Date().toISOString()
+                        })
+                    });
+                } catch (notificationError) {
+                    console.error('Failed to send error notification:', notificationError);
+                }
+
+                // Show error page so user knows something went wrong
+                showCompletionMessage(true);
             }
         }
 
