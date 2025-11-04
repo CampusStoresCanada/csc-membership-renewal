@@ -1351,6 +1351,19 @@
                     `;
                 });
 
+                // Show membership tax (GST or HST based on province)
+                if (membershipTax.taxAmount > 0) {
+                    lineItems += `
+                    <tr>
+                        <td class="desc-col">${membershipTax.taxLabel}</td>
+                        <td class="qty-col">1</td>
+                        <td class="price-col">C$${membershipTax.taxAmount.toFixed(2)}</td>
+                        <td class="amount-col">C$${membershipTax.taxAmount.toFixed(2)}</td>
+                    </tr>
+                    `;
+                }
+
+                // Show conference tax (always Ontario HST 13%)
                 if (conferenceHST > 0) {
                     lineItems += `
                     <tr>
