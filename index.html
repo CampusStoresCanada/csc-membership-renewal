@@ -1459,10 +1459,17 @@
                     `;
                 }
 
-                // Create QuickBooks invoice first (for bookkeeping and to get invoice ID)
-                const qboResult = await createQuickBooksInvoice();
+                // Try to create QuickBooks invoice first (for bookkeeping)
+                // But don't let QB failures block Stripe payment
+                let qboResult = null;
+                try {
+                    qboResult = await createQuickBooksInvoice();
+                } catch (qbError) {
+                    console.warn('⚠️ QuickBooks invoice failed, continuing with Stripe only:', qbError.message);
+                    // Continue anyway - Stripe will still work
+                }
 
-                // Then create Stripe checkout (uses QB invoice ID in metadata)
+                // Create Stripe checkout (works even if QB failed)
                 const stripeResult = await createStripeCheckout();
 
                 // Check if QB needs to retry due to token expiry
@@ -1544,6 +1551,9 @@
                 if (stripeResult && stripeResult.checkoutUrl) {
                     window.stripeCheckoutUrl = stripeResult.checkoutUrl;
                     console.log('💳 Stripe checkout ready');
+                } else if (!qboResult || !qboResult.paymentLink) {
+                    // If BOTH Stripe and QB failed, throw error
+                    throw new Error('Unable to create payment checkout. Please try again or contact support.');
                 }
 
                 // Enable next step button
