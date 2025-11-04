@@ -110,9 +110,11 @@ export default async function handler(req, res) {
           qbo_invoice_number: qboInvoiceNumber || ''
         }
       },
-      // Enable automatic tax calculation for Canadian provinces
+      // Disable automatic tax - we calculate manually
+      // Conference fees always use Ontario HST (13%) - event is in Ontario
+      // Membership fees use organization's province tax rate
       automatic_tax: {
-        enabled: true
+        enabled: false
       },
       phone_number_collection: {
         enabled: false
@@ -152,6 +154,21 @@ export default async function handler(req, res) {
   }
 }
 
+// Get tax rate for a province
+function getTaxRateForProvince(province) {
+  const provinceTaxRates = {
+    'Ontario': 0.13,           // HST ON 13%
+    'New Brunswick': 0.15,     // HST NB 15%
+    'Newfoundland': 0.15,      // HST NL 15%
+    'Newfoundland and Labrador': 0.15,  // HST NL 15%
+    'Nova Scotia': 0.14,       // HST NS 14% (2025)
+    'Prince Edward Island': 0.15 // HST PE 15%
+  };
+
+  // All other provinces/territories: GST 5% (BC, AB, SK, MB, QC, YT, NT, NU)
+  return provinceTaxRates[province] || 0.05;
+}
+
 // Build Stripe line items based on billing display preference
 function buildStripeLineItems(invoiceData, billingPreferences, organizationData) {
   const lineItems = [];
@@ -160,6 +177,12 @@ function buildStripeLineItems(invoiceData, billingPreferences, organizationData)
   const province = organizationData?.address?.province || '';
 
   console.log('🔍 Building Stripe line items with billingDisplay:', billingDisplay);
+
+  // Tax rates
+  const membershipTaxRate = getTaxRateForProvince(province);
+  const conferenceTaxRate = 0.13; // Always Ontario HST (13%) - conference is in Ontario
+
+  console.log('💰 Tax rates - Membership:', membershipTaxRate, '(' + province + '), Conference:', conferenceTaxRate, '(Ontario)');
 
   // Map institution size to product IDs
   const membershipProductMap = {
@@ -174,79 +197,84 @@ function buildStripeLineItems(invoiceData, billingPreferences, organizationData)
   const combinedProductId = process.env.STRIPE_PRODUCT_COMBINED;
 
   if (billingDisplay === 'single-item') {
-    // Single line item with combined total
-    // Stripe Tax will automatically apply correct provincial rates
-    const totalBeforeTax = membershipFee + conferenceTotal;
+    // Single line item with combined total (tax-inclusive)
+    const membershipWithTax = membershipFee * (1 + membershipTaxRate);
+    const conferenceWithTax = conferenceTotal * (1 + conferenceTaxRate);
+    const totalWithTax = membershipWithTax + conferenceWithTax;
 
     lineItems.push({
       price_data: {
         currency: 'cad',
         product: combinedProductId,
-        unit_amount: Math.round(totalBeforeTax * 100), // Convert to cents
-        tax_behavior: 'exclusive' // Required for automatic_tax
+        unit_amount: Math.round(totalWithTax * 100), // Convert to cents, tax included
+        tax_behavior: 'inclusive' // Price includes tax
       },
       quantity: 1
     });
 
   } else if (billingDisplay === 'membership-conference') {
-    // Two line items: membership + conference
+    // Two line items: membership + conference (both tax-inclusive)
     const membershipProductId = membershipProductMap[institutionSize];
 
-    // Membership line
+    // Membership line (with provincial tax)
+    const membershipWithTax = membershipFee * (1 + membershipTaxRate);
     lineItems.push({
       price_data: {
         currency: 'cad',
         product: membershipProductId,
-        unit_amount: Math.round(membershipFee * 100),
-        tax_behavior: 'exclusive'
+        unit_amount: Math.round(membershipWithTax * 100), // Tax included
+        tax_behavior: 'inclusive'
       },
       quantity: 1
     });
 
-    // Conference line (if there are attendees)
+    // Conference line (if there are attendees) - with Ontario HST
     if (conferenceTotal > 0 && paidAttendees > 0) {
+      const conferencePerAttendeeWithTax = (conferenceTotal / paidAttendees) * (1 + conferenceTaxRate);
       lineItems.push({
         price_data: {
           currency: 'cad',
           product: conferenceProductId,
-          unit_amount: Math.round((conferenceTotal / paidAttendees) * 100), // Per attendee
-          tax_behavior: 'exclusive'
+          unit_amount: Math.round(conferencePerAttendeeWithTax * 100), // Per attendee, tax included
+          tax_behavior: 'inclusive'
         },
         quantity: paidAttendees
       });
     }
 
   } else {
-    // Individual line per attendee (default for 'individual-line-items' or any other mode)
+    // Individual line per attendee (default for 'individual-line-items' or any other mode) - tax-inclusive
     const membershipProductId = membershipProductMap[institutionSize];
 
     console.log('🔍 Individual items mode - billingDisplay:', billingDisplay);
 
-    // Membership line
+    // Membership line (with provincial tax)
+    const membershipWithTax = membershipFee * (1 + membershipTaxRate);
     lineItems.push({
       price_data: {
         currency: 'cad',
         product: membershipProductId,
-        unit_amount: Math.round(membershipFee * 100),
-        tax_behavior: 'exclusive'
+        unit_amount: Math.round(membershipWithTax * 100), // Tax included
+        tax_behavior: 'inclusive'
       },
       quantity: 1
     });
 
-    // Individual attendee lines
+    // Individual attendee lines (with Ontario HST)
     if (attendeeBreakdown && attendeeBreakdown.length > 0) {
       const paidAttendeesList = attendeeBreakdown.filter(a => a.category === 'paid');
       console.log('👥 Found', paidAttendeesList.length, 'paid attendees for individual line items');
 
       paidAttendeesList.forEach(attendee => {
         const attendeeFee = conferenceTotal / paidAttendees; // Even split
+        const attendeeFeeWithTax = attendeeFee * (1 + conferenceTaxRate);
 
         lineItems.push({
           price_data: {
             currency: 'cad',
             product: conferenceProductId,
-            unit_amount: Math.round(attendeeFee * 100),
-            tax_behavior: 'exclusive'
+            unit_amount: Math.round(attendeeFeeWithTax * 100), // Tax included
+            tax_behavior: 'inclusive'
           },
           quantity: 1
           // Note: Attendee name will show in metadata/receipt, not per-line-item

@@ -1433,6 +1433,39 @@
             // Mark invoice as confirmed
             window.invoiceConfirmed = true;
 
+            // Show payment method choice modal
+            const modal = document.getElementById('invoiceModal');
+            let actions = null;
+            if (modal) {
+                actions = modal.querySelector('.invoice-modal-actions');
+                if (actions) {
+                    actions.innerHTML = `
+                        <div style="padding: 24px; text-align: center;">
+                            <h3 style="margin: 0 0 16px; color: #333;">How would you like to pay?</h3>
+                            <p style="margin: 0 0 24px; color: #666; font-size: 14px;">
+                                Choose your preferred payment method below.
+                            </p>
+                            <div style="display: flex; gap: 12px; justify-content: center;">
+                                <button onclick="processPayment('card')" class="next-btn primary" style="flex: 1; max-width: 200px;">
+                                    💳 Pay with Card
+                                </button>
+                                <button onclick="processPayment('invoice')" class="next-btn secondary" style="flex: 1; max-width: 200px;">
+                                    📄 Pay by Invoice
+                                </button>
+                            </div>
+                            <p style="margin: 24px 0 0; color: #999; font-size: 12px;">
+                                Invoice payment allows check, wire transfer, or other payment methods.
+                            </p>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        // Process payment based on user's choice
+        async function processPayment(paymentMethod) {
+            console.log('💰 Payment method selected:', paymentMethod);
+
             // Show sync progress
             const modal = document.getElementById('invoiceModal');
             let actions = null;
@@ -1442,23 +1475,13 @@
                     actions.innerHTML = `
                         <div style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 16px;">
                             <div style="width: 20px; height: 20px; border: 2px solid #ba003b; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                            <span style="color: #666; font-size: 14px;">Saving your information...</span>
+                            <span style="color: #666; font-size: 14px;">Creating invoice and payment checkout...</span>
                         </div>
                     `;
                 }
             }
 
             try {
-                // Update progress message
-                if (modal && actions) {
-                    actions.innerHTML = `
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 16px;">
-                            <div style="width: 20px; height: 20px; border: 2px solid #ba003b; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                            <span style="color: #666; font-size: 14px;">Creating invoice and payment checkout...</span>
-                        </div>
-                    `;
-                }
-
                 // CRITICAL: Open payment window NOW (during user click event) to bypass popup blockers
                 // We'll navigate it to the actual URL after API calls complete
                 console.log('🪟 Opening payment window (will navigate after API calls)...');
@@ -1633,24 +1656,34 @@
                 // Close modal
                 closeInvoiceModal();
 
-                // Navigate the pre-opened payment window to Stripe (or QB fallback)
-                console.log('🔍 DEBUG: Payment URL selection:');
+                // Navigate the pre-opened payment window based on user's choice
+                console.log('🔍 DEBUG: Payment method choice:', paymentMethod);
                 console.log('  - Stripe URL:', window.stripeCheckoutUrl || 'NOT SET');
                 console.log('  - QB URL:', window.qboInvoiceUrl || 'NOT SET');
 
-                if (window.stripeCheckoutUrl) {
-                    console.log('✅ NAVIGATING TO STRIPE CHECKOUT:', window.stripeCheckoutUrl);
-                    paymentWindow.location.href = window.stripeCheckoutUrl;
+                if (paymentMethod === 'card') {
+                    // User wants to pay with card - open Stripe
+                    if (window.stripeCheckoutUrl) {
+                        console.log('💳 NAVIGATING TO STRIPE CHECKOUT:', window.stripeCheckoutUrl);
+                        paymentWindow.location.href = window.stripeCheckoutUrl;
+                    } else {
+                        console.error('❌ Stripe checkout failed - falling back to QB invoice');
+                        if (window.qboInvoiceUrl) {
+                            paymentWindow.location.href = window.qboInvoiceUrl;
+                        } else {
+                            paymentWindow.close();
+                            alert('Unable to create payment checkout. Please try again or contact support.');
+                        }
+                    }
                 } else {
-                    console.error('❌ No Stripe checkout URL available');
-                    // Fallback to QB if Stripe failed
+                    // User wants to pay by invoice - open QB
                     if (window.qboInvoiceUrl) {
-                        console.log('⚠️ NAVIGATING TO QB FALLBACK:', window.qboInvoiceUrl);
+                        console.log('📄 NAVIGATING TO QB INVOICE:', window.qboInvoiceUrl);
                         paymentWindow.location.href = window.qboInvoiceUrl;
                     } else {
-                        console.error('❌ NO PAYMENT URLS AVAILABLE AT ALL!');
+                        console.error('❌ QB invoice failed');
                         paymentWindow.close();
-                        alert('Unable to create payment checkout. Please try again or contact support.');
+                        alert('Unable to create invoice. Please try again or contact support.');
                     }
                 }
 
