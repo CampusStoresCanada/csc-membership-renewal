@@ -600,29 +600,31 @@
                                 Your CSC membership has been successfully renewed for the 2025-2026 year.
                             </p>
 
-                            <div style="margin: 50px auto; max-width: 600px;">
-                                <h2 style="font-size: 22px; margin-bottom: 30px; color: #333; text-align: center;">Choose Your Payment Method</h2>
+                            <div style="margin: 40px 0 30px 0;">
+                                <h2 style="font-size: 24px; margin-bottom: 20px; color: #333;">Choose Your Payment Method</h2>
 
-                                <div style="display: flex; flex-direction: column; gap: 16px;">
+                                <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
                                     <!-- Invoice Payment Option -->
-                                    <button onclick="openInvoiceForPayment()" class="next-btn" style="width: 100%; margin: 0; padding: 20px; text-align: left; display: flex; align-items: center; gap: 16px; background: white; border: 2px solid #dee2e6; cursor: pointer;">
-                                        <span style="font-size: 32px;">📄</span>
-                                        <div style="flex: 1;">
-                                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px; color: #333;">Pay via Invoice</div>
-                                            <div style="font-size: 14px; color: #666;">View or email your invoice to accounts payable</div>
-                                        </div>
-                                        <span style="font-size: 20px; color: #999;">→</span>
-                                    </button>
+                                    <div style="flex: 1; min-width: 280px; max-width: 400px; border: 2px solid #0071bc; border-radius: 8px; padding: 24px; background: #f8f9fa;">
+                                        <h3 style="font-size: 20px; margin-bottom: 12px; color: #0071bc;">📄 Pay via Invoice</h3>
+                                        <p style="margin-bottom: 20px; font-size: 15px; color: #666;">
+                                            View or email your invoice to accounts payable
+                                        </p>
+                                        <button type="button" onclick="openInvoiceForPayment()" class="next-btn" style="width: 100%; margin: 0; pointer-events: auto;">
+                                            Open Invoice
+                                        </button>
+                                    </div>
 
                                     <!-- Credit Card Payment Option -->
-                                    <button onclick="openCreditCardPayment()" class="next-btn" style="width: 100%; margin: 0; padding: 20px; text-align: left; display: flex; align-items: center; gap: 16px; cursor: pointer;">
-                                        <span style="font-size: 32px;">💳</span>
-                                        <div style="flex: 1;">
-                                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px; color: #333;">Pay with Credit Card</div>
-                                            <div style="font-size: 14px; color: #666;">Pay now via secure payment portal</div>
-                                        </div>
-                                        <span style="font-size: 20px; color: #999;">→</span>
-                                    </button>
+                                    <div style="flex: 1; min-width: 280px; max-width: 400px; border: 2px solid #0071bc; border-radius: 8px; padding: 24px; background: #f8f9fa;">
+                                        <h3 style="font-size: 20px; margin-bottom: 12px; color: #0071bc;">💳 Pay with Credit Card</h3>
+                                        <p style="margin-bottom: 20px; font-size: 15px; color: #666;">
+                                            Pay now with credit card via secure payment portal
+                                        </p>
+                                        <button type="button" onclick="openCreditCardPayment()" class="next-btn" style="width: 100%; margin: 0; pointer-events: auto;">
+                                            Pay Now
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
