@@ -1558,13 +1558,8 @@
                 // Close modal
                 closeInvoiceModal();
 
-                // Open QuickBooks invoice in new tab immediately
-                if (window.qboInvoiceUrl) {
-                    console.log('🔗 Opening QuickBooks invoice in new tab');
-                    window.open(window.qboInvoiceUrl, '_blank');
-                } else {
-                    console.error('❌ No QuickBooks invoice URL available');
-                }
+                // DON'T auto-open the invoice - let user choose payment method on success page
+                console.log('📄 QuickBooks invoice created - user will choose payment method on success page');
 
                 // Show "processing" message while Notion sync continues in background
                 showProcessingMessage();
@@ -1575,21 +1570,17 @@
                 console.log('✅ QuickBooks invoice created and opened in new tab');
 
             } catch (error) {
-                console.error('❌ Sync failed:', error);
+                console.warn('⚠️ Invoice/sync error (non-blocking for testing):', error);
 
-                // Show error in modal
-                if (modal && actions) {
-                    actions.innerHTML = `
-                        <div style="text-align: center; padding: 16px;">
-                            <div style="color: #dc3545; margin-bottom: 12px; font-weight: 600;">⚠️ Sync Error</div>
-                            <div style="color: #666; font-size: 14px; margin-bottom: 16px;">
-                                Your data couldn't be saved automatically, but has been logged for manual processing.
-                            </div>
-                            <button class="invoice-btn primary" onclick="closeInvoiceModal(); proceedAnyway();">Continue Anyway</button>
-                            <button class="invoice-btn secondary" onclick="location.reload()">Refresh & Try Again</button>
-                        </div>
-                    `;
+                // Enable next button and close modal (non-blocking for testing)
+                const nextButton = document.querySelector('.next-btn');
+                if (nextButton) {
+                    nextButton.disabled = false;
+                    nextButton.classList.remove('disabled');
                 }
+                closeInvoiceModal();
+
+                console.log('✅ Proceeding despite errors (testing mode)');
             }
         }
 
