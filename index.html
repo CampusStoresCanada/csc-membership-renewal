@@ -594,19 +594,38 @@
                         <div id="successContent" style="display: none;">
                             <h1 class="welcome-title">
                                 <span>🎉</span>
-                                Membership Renewal Complete!
+                                Membership Renewal Submitted!
                             </h1>
                             <p class="welcome-text">
-                                Your CSC membership has been successfully renewed for the 2025-2026 year.
-                                Your payment has been processed and you're all set!
+                                Your CSC membership renewal is ready. Please complete your payment to finalize your renewal for the 2025-2026 year.
                             </p>
+
+                            <!-- Payment Options -->
+                            <div style="background: #f8f9fa; padding: 24px; border-radius: 8px; margin: 24px 0; max-width: 500px; margin-left: auto; margin-right: auto;">
+                                <h3 style="margin: 0 0 16px; color: #333; font-size: 20px;">Choose Your Payment Method</h3>
+
+                                <div id="stripePaymentButton" style="display: none; margin-bottom: 12px;">
+                                    <button onclick="openStripePayment()" class="next-btn primary" style="width: 100%; padding: 16px; font-size: 16px;">
+                                        💳 Pay with Card (Stripe)
+                                    </button>
+                                    <p style="margin: 8px 0 0; font-size: 13px; color: #666;">Instant payment via credit card</p>
+                                </div>
+
+                                <div id="qboPaymentButton" style="display: none;">
+                                    <button onclick="openQBOInvoice()" class="next-btn secondary" style="width: 100%; padding: 16px; font-size: 16px;">
+                                        📄 View Invoice (QuickBooks)
+                                    </button>
+                                    <p style="margin: 8px 0 0; font-size: 13px; color: #666;">Pay by check, wire transfer, or online invoice</p>
+                                </div>
+                            </div>
+
                             <p class="welcome-text">
                                 You'll receive email confirmations for both your payment and membership renewal.
                                 If you have any questions between 8:30 AM and 4:30 PM Mountain Time on a
                                 weekday, you can reach out to <a href="mailto:google@campusstores.ca" style="color: #0071bc;">Steve Thomas</a>.
                             </p>
                             <p class="welcome-text">
-                                <strong>What's next?</strong> Your membership benefits are now active, including access to
+                                <strong>What's next?</strong> Once payment is complete, your membership benefits will be active, including access to
                                 the conference (if selected) and all CSC member resources.
                             </p>
                             <p class="welcome-text">
@@ -1433,39 +1452,6 @@
             // Mark invoice as confirmed
             window.invoiceConfirmed = true;
 
-            // Show payment method choice modal
-            const modal = document.getElementById('invoiceModal');
-            let actions = null;
-            if (modal) {
-                actions = modal.querySelector('.invoice-modal-actions');
-                if (actions) {
-                    actions.innerHTML = `
-                        <div style="padding: 16px; text-align: center; width: 100%; box-sizing: border-box;">
-                            <h3 style="margin: 0 0 12px; color: #333; font-size: 18px;">How would you like to pay?</h3>
-                            <p style="margin: 0 0 20px; color: #666; font-size: 14px;">
-                                Choose your preferred payment method below.
-                            </p>
-                            <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 400px; margin: 0 auto;">
-                                <button onclick="processPayment('card')" class="next-btn primary" style="width: 100%; padding: 12px 24px; font-size: 16px;">
-                                    💳 Pay with Card
-                                </button>
-                                <button onclick="processPayment('invoice')" class="next-btn secondary" style="width: 100%; padding: 12px 24px; font-size: 16px;">
-                                    📄 Pay by Invoice
-                                </button>
-                            </div>
-                            <p style="margin: 20px 0 0; color: #999; font-size: 12px;">
-                                Invoice payment allows check, wire transfer, or other payment methods.
-                            </p>
-                        </div>
-                    `;
-                }
-            }
-        }
-
-        // Process payment based on user's choice
-        async function processPayment(paymentMethod) {
-            console.log('💰 Payment method selected:', paymentMethod);
-
             // Show sync progress
             const modal = document.getElementById('invoiceModal');
             let actions = null;
@@ -1482,65 +1468,7 @@
             }
 
             try {
-                // CRITICAL: Open payment window NOW (during user click event) to bypass popup blockers
-                // We'll navigate it to the actual URL after API calls complete
-                console.log('🪟 Opening payment window (will navigate after API calls)...');
-                const paymentWindow = window.open('about:blank', '_blank');
-                if (!paymentWindow) {
-                    alert('⚠️ Popup blocker detected! Please allow popups for this site and try again.');
-                    closeInvoiceModal();
-                    return;
-                }
-
-                // Add loading message to the payment window so it's not blank
-                paymentWindow.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>Preparing Payment Checkout...</title>
-                        <style>
-                            body {
-                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                min-height: 100vh;
-                                margin: 0;
-                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                                color: white;
-                            }
-                            .container {
-                                text-align: center;
-                                padding: 40px;
-                            }
-                            .spinner {
-                                width: 50px;
-                                height: 50px;
-                                border: 4px solid rgba(255, 255, 255, 0.3);
-                                border-top-color: white;
-                                border-radius: 50%;
-                                animation: spin 1s linear infinite;
-                                margin: 0 auto 24px;
-                            }
-                            @keyframes spin {
-                                to { transform: rotate(360deg); }
-                            }
-                            h1 { margin: 0 0 16px; font-size: 24px; }
-                            p { margin: 0; opacity: 0.9; font-size: 16px; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="container">
-                            <div class="spinner"></div>
-                            <h1>Preparing your checkout...</h1>
-                            <p>Please wait while we set up your payment session.</p>
-                        </div>
-                    </body>
-                    </html>
-                `);
-                paymentWindow.document.close();
-
-                // Try to create QuickBooks invoice first (for bookkeeping)
+                // Create QuickBooks invoice first (for bookkeeping)
                 // But don't let QB failures block Stripe payment
                 let qboResult = null;
                 try {
@@ -1653,39 +1581,13 @@
                     nextButton.classList.remove('disabled');
                 }
 
-                // Close modal
+                // Close modal and move to next step
                 closeInvoiceModal();
 
-                // Navigate the pre-opened payment window based on user's choice
-                console.log('🔍 DEBUG: Payment method choice:', paymentMethod);
-                console.log('  - Stripe URL:', window.stripeCheckoutUrl || 'NOT SET');
-                console.log('  - QB URL:', window.qboInvoiceUrl || 'NOT SET');
-
-                if (paymentMethod === 'card') {
-                    // User wants to pay with card - open Stripe
-                    if (window.stripeCheckoutUrl) {
-                        console.log('💳 NAVIGATING TO STRIPE CHECKOUT:', window.stripeCheckoutUrl);
-                        paymentWindow.location.href = window.stripeCheckoutUrl;
-                    } else {
-                        console.error('❌ Stripe checkout failed - falling back to QB invoice');
-                        if (window.qboInvoiceUrl) {
-                            paymentWindow.location.href = window.qboInvoiceUrl;
-                        } else {
-                            paymentWindow.close();
-                            alert('Unable to create payment checkout. Please try again or contact support.');
-                        }
-                    }
-                } else {
-                    // User wants to pay by invoice - open QB
-                    if (window.qboInvoiceUrl) {
-                        console.log('📄 NAVIGATING TO QB INVOICE:', window.qboInvoiceUrl);
-                        paymentWindow.location.href = window.qboInvoiceUrl;
-                    } else {
-                        console.error('❌ QB invoice failed');
-                        paymentWindow.close();
-                        alert('Unable to create invoice. Please try again or contact support.');
-                    }
-                }
+                console.log('✅ Payment links ready:', {
+                    stripe: window.stripeCheckoutUrl,
+                    qbo: window.qboInvoiceUrl
+                });
 
                 // Show "processing" message while Notion sync continues in background
                 showProcessingMessage();
@@ -1693,7 +1595,7 @@
                 // Start background Notion sync (don't await it)
                 backgroundNotionSync();
 
-                console.log('✅ Payment checkout ready - Stripe checkout opened in new tab (QB invoice for bookkeeping)');
+                console.log('✅ Invoices created - payment links available on confirmation page');
 
             } catch (error) {
                 console.error('❌ Sync failed:', error);
@@ -4154,6 +4056,43 @@
         }
         function initializeStep6() {
             console.log('🚀 Step 6 (Results) initialized!');
+
+            // Show payment buttons if URLs are available
+            if (window.stripeCheckoutUrl) {
+                const stripeButton = document.getElementById('stripePaymentButton');
+                if (stripeButton) {
+                    stripeButton.style.display = 'block';
+                    console.log('💳 Stripe payment button shown');
+                }
+            }
+
+            if (window.qboInvoiceUrl) {
+                const qboButton = document.getElementById('qboPaymentButton');
+                if (qboButton) {
+                    qboButton.style.display = 'block';
+                    console.log('📄 QB invoice button shown');
+                }
+            }
+        }
+
+        // Open Stripe payment in new tab
+        function openStripePayment() {
+            if (window.stripeCheckoutUrl) {
+                console.log('💳 Opening Stripe checkout:', window.stripeCheckoutUrl);
+                window.open(window.stripeCheckoutUrl, '_blank');
+            } else {
+                alert('Payment link not available. Please refresh the page or contact support.');
+            }
+        }
+
+        // Open QB invoice in new tab
+        function openQBOInvoice() {
+            if (window.qboInvoiceUrl) {
+                console.log('📄 Opening QB invoice:', window.qboInvoiceUrl);
+                window.open(window.qboInvoiceUrl, '_blank');
+            } else {
+                alert('Invoice link not available. Please refresh the page or contact support.');
+            }
         }
         // ===========================================
         // CONTACT MODAL MANAGEMENT
