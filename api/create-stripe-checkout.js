@@ -190,9 +190,11 @@ function buildStripeLineItems(invoiceData, billingPreferences, organizationData)
       });
     }
 
-  } else if (billingDisplay === 'individual-items') {
-    // Individual line per attendee
+  } else {
+    // Individual line per attendee (default for 'individual-line-items' or any other mode)
     const membershipProductId = membershipProductMap[institutionSize];
+
+    console.log('🔍 Individual items mode - billingDisplay:', billingDisplay);
 
     // Membership line
     lineItems.push({
@@ -208,6 +210,7 @@ function buildStripeLineItems(invoiceData, billingPreferences, organizationData)
     // Individual attendee lines
     if (attendeeBreakdown && attendeeBreakdown.length > 0) {
       const paidAttendeesList = attendeeBreakdown.filter(a => a.category === 'paid');
+      console.log('👥 Found', paidAttendeesList.length, 'paid attendees for individual line items');
 
       paidAttendeesList.forEach(attendee => {
         const attendeeFee = conferenceTotal / paidAttendees; // Even split
@@ -225,6 +228,8 @@ function buildStripeLineItems(invoiceData, billingPreferences, organizationData)
           tax_behavior: 'exclusive'
         });
       });
+    } else {
+      console.log('⚠️ No attendee breakdown provided - skipping individual conference lines');
     }
   }
 
