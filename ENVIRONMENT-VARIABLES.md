@@ -54,13 +54,15 @@ S3_REGION=<aws_region>
 AWS_SES_REGION=<aws_ses_region>
 AWS_SES_SENDER_EMAIL=<verified_sender_email>
 ERROR_NOTIFICATION_EMAIL=<admin_email_for_errors>
+BOOKKEEPER_EMAIL=<bookkeeper_email_for_invoice_coding>
 ```
 
 **Notes:**
 - `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are shared for both S3 and SES
 - `AWS_SES_REGION` defaults to `S3_REGION` if not set
-- `AWS_SES_SENDER_EMAIL` must be a **verified email** or domain in AWS SES
-- `ERROR_NOTIFICATION_EMAIL` defaults to `steve@campusstores.ca` if not set
+- `AWS_SES_SENDER_EMAIL` must be a **verified email** or domain in AWS SES (e.g., `noreply@campusstores.ca`)
+- `ERROR_NOTIFICATION_EMAIL` defaults to `steve@campusstores.ca` if not set (receives Notion sync errors)
+- `BOOKKEEPER_EMAIL` defaults to `ERROR_NOTIFICATION_EMAIL` if not set (receives QuickBooks invoice coding instructions)
 - **SES Sandbox Mode**: If your SES account is in sandbox, both sender and recipient must be verified
 
 ### Setting up AWS SES:
@@ -93,7 +95,7 @@ VERCEL_PROJECT_ID=<your_vercel_project_id>
 
 ### Full Production Setup (Recommended)
 - [ ] All minimal setup variables
-- [ ] AWS SES email variables (3 variables)
+- [ ] AWS SES email variables (4 variables: AWS_SES_REGION, AWS_SES_SENDER_EMAIL, ERROR_NOTIFICATION_EMAIL, BOOKKEEPER_EMAIL)
 - [ ] Vercel auto-refresh variables (2 variables)
 
 ### Optional (Already Has Defaults)

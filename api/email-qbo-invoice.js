@@ -39,13 +39,12 @@ export default async function handler(req, res) {
       return;
     }
 
-    // For testing: always send to google@campusstores.ca regardless of customer email
-    const testEmailAddress = 'google@campusstores.ca';
+    // Production: Send to actual customer email
+    const recipientEmail = customerEmail;
 
     console.log('📧 Sending QuickBooks invoice email for:', {
       invoiceId,
-      originalCustomerEmail: customerEmail,
-      testEmailAddress,
+      recipientEmail,
       organizationName
     });
 
@@ -63,7 +62,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        EmailAddress: testEmailAddress
+        EmailAddress: recipientEmail
       })
     });
 
@@ -201,11 +200,11 @@ async function retryEmailSend(requestBody, newTokens) {
   const qboCompanyId = process.env.QBO_COMPANY_ID;
   const qboBaseUrl = process.env.QBO_BASE_URL || 'https://sandbox-quickbooks.api.intuit.com';
 
-  const testEmailAddress = 'google@campusstores.ca';
+  const recipientEmail = customerEmail;
 
   console.log('🔄 Retrying email send with fresh tokens...', {
     invoiceId,
-    testEmailAddress
+    recipientEmail
   });
 
   const sendEmailUrl = `${qboBaseUrl}/v3/company/${qboCompanyId}/invoice/${invoiceId}/send`;
@@ -218,7 +217,7 @@ async function retryEmailSend(requestBody, newTokens) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      EmailAddress: testEmailAddress
+      EmailAddress: recipientEmail
     })
   });
 
