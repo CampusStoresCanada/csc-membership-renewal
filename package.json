@@ -5,7 +5,8 @@
   "type": "module",
   "dependencies": {
     "@aws-sdk/client-ses": "^3.679.0",
-    "@notionhq/client": "^2.2.15"
+    "@notionhq/client": "^2.2.15",
+    "stripe": "^19.2.0"
   },
   "engines": {
     "node": ">=18.0.0"
