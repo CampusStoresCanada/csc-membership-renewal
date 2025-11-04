@@ -55,13 +55,41 @@ export default async function handler(req, res) {
     // Build line items based on billing preference
     const lineItems = buildStripeLineItems(invoiceData, billingPreferences, organizationData);
 
-    // Create Stripe Checkout Session
+    // Pre-fill customer information to reduce data entry
+    const customerData = {
+      email: organizationData.primaryContact?.workEmail || organizationData.email,
+      name: organizationData.name,
+      metadata: {
+        notion_token: token,
+        organization_name: organizationData.name
+      }
+    };
+
+    // Add address if available
+    if (organizationData.address) {
+      const addr = organizationData.address;
+      customerData.address = {
+        line1: addr.street || '',
+        line2: addr.street2 || '',
+        city: addr.city || '',
+        state: addr.province || '',
+        postal_code: addr.postalCode || '',
+        country: 'CA' // Canada
+      };
+    }
+
+    // Create Stripe Customer with pre-filled data
+    console.log('👤 Creating Stripe customer with pre-filled address...');
+    const customer = await stripe.customers.create(customerData);
+    console.log('✅ Stripe customer created:', customer.id);
+
+    // Create Stripe Checkout Session with pre-filled customer
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: lineItems,
       success_url: successUrl + '?session_id={CHECKOUT_SESSION_ID}',
       cancel_url: cancelUrl,
-      customer_email: organizationData.primaryContact?.workEmail,
+      customer: customer.id, // Use pre-created customer
       metadata: {
         notion_token: token,
         organization_name: organizationData.name,
@@ -86,8 +114,6 @@ export default async function handler(req, res) {
       automatic_tax: {
         enabled: true
       },
-      customer_creation: 'always',
-      billing_address_collection: 'required',
       phone_number_collection: {
         enabled: false
       }

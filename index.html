@@ -1469,6 +1469,54 @@
                     return;
                 }
 
+                // Add loading message to the payment window so it's not blank
+                paymentWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Preparing Payment Checkout...</title>
+                        <style>
+                            body {
+                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                min-height: 100vh;
+                                margin: 0;
+                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                color: white;
+                            }
+                            .container {
+                                text-align: center;
+                                padding: 40px;
+                            }
+                            .spinner {
+                                width: 50px;
+                                height: 50px;
+                                border: 4px solid rgba(255, 255, 255, 0.3);
+                                border-top-color: white;
+                                border-radius: 50%;
+                                animation: spin 1s linear infinite;
+                                margin: 0 auto 24px;
+                            }
+                            @keyframes spin {
+                                to { transform: rotate(360deg); }
+                            }
+                            h1 { margin: 0 0 16px; font-size: 24px; }
+                            p { margin: 0; opacity: 0.9; font-size: 16px; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <div class="spinner"></div>
+                            <h1>Preparing your checkout...</h1>
+                            <p>Please wait while we set up your payment session.</p>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                paymentWindow.document.close();
+
                 // Try to create QuickBooks invoice first (for bookkeeping)
                 // But don't let QB failures block Stripe payment
                 let qboResult = null;
