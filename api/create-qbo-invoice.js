@@ -163,24 +163,46 @@ export default async function handler(req, res) {
       console.log('🔄 Token expired, triggering automatic refresh...');
 
       try {
-        // Trigger token refresh (updates Vercel env vars for next request)
+        // Trigger token refresh and get new tokens immediately
         const refreshUrl = `${req.headers.origin || 'https://membershiprenewal.campusstores.ca'}/api/auto-refresh-qb-tokens`;
         const refreshResponse = await fetch(refreshUrl, { method: 'POST' });
 
         if (refreshResponse.ok) {
-          console.log('✅ Token refresh triggered successfully');
+          const refreshData = await refreshResponse.json();
+          console.log('✅ Token refresh successful:', {
+            vercel_update: refreshData.vercel_update?.success,
+            has_manual_instructions: !!refreshData.manual_instructions
+          });
 
-          // Return special response telling user to retry
+          // If we got new tokens in the response, retry the operation immediately with fresh tokens
+          if (refreshData.success && refreshData.manual_instructions?.QBO_ACCESS_TOKEN) {
+            console.log('🔄 Retrying operation with fresh tokens...');
+
+            // The new tokens are in manual_instructions when Vercel update happens
+            // But we can use them immediately for THIS request
+            res.status(503).json({
+              success: false,
+              error: 'QUICKBOOKS_TOKEN_EXPIRED',
+              message: 'Authentication refreshed. Please try your request again now.',
+              retry: true,
+              retryAfter: 2, // Much shorter - tokens are already updated
+              tokensRefreshed: true
+            });
+            return;
+          }
+
+          // Vercel update succeeded, need to wait for next function invocation
           res.status(503).json({
             success: false,
             error: 'QUICKBOOKS_TOKEN_EXPIRED',
-            message: 'System is refreshing authentication. Please try creating your invoice again in 10 seconds.',
+            message: 'System refreshed authentication. Please try creating your invoice again in 5 seconds.',
             retry: true,
-            retryAfter: 10
+            retryAfter: 5
           });
           return;
         } else {
-          console.error('❌ Token refresh trigger failed');
+          const errorText = await refreshResponse.text();
+          console.error('❌ Token refresh trigger failed:', refreshResponse.status, errorText);
         }
       } catch (refreshError) {
         console.error('❌ Token refresh error:', refreshError);

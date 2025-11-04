@@ -49,29 +49,40 @@ export default async function handler(req, res) {
 
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
-      console.error('❌ QuickBooks token refresh failed:', tokenResponse.status, errorText);
+      console.error('❌ ❌ ❌ CRITICAL: QuickBooks token refresh FAILED ❌ ❌ ❌');
+      console.error('Status:', tokenResponse.status);
+      console.error('Error:', errorText);
+      console.error('Refresh token age: Check if it\'s older than 101 days');
+
+      if (tokenResponse.status === 400) {
+        console.error('🚨 REFRESH TOKEN EXPIRED - Manual re-authentication required!');
+        console.error('👉 Go to: https://membershiprenewal.campusstores.ca/qbo-oauth-helper.html');
+      }
 
       res.status(tokenResponse.status).json({
         success: false,
         error: 'QuickBooks token refresh failed',
         message: tokenResponse.status === 400
-          ? 'Refresh token has expired. Manual re-authentication required via qbo-oauth-helper.html'
+          ? 'Refresh token has expired (101 days). Manual re-authentication required via qbo-oauth-helper.html'
           : 'QuickBooks token refresh service error',
-        details: errorText
+        details: errorText,
+        action_required: tokenResponse.status === 400
+          ? 'Visit https://membershiprenewal.campusstores.ca/qbo-oauth-helper.html to re-authenticate'
+          : 'Check QuickBooks API status'
       });
       return;
     }
 
     const tokens = await tokenResponse.json();
-    console.log('✅ Got new QuickBooks tokens');
-
-    // Log token info (without exposing actual tokens)
+    console.log('✅ ✅ ✅ SUCCESS: QuickBooks tokens refreshed ✅ ✅ ✅');
     console.log('🔑 Token details:', {
       access_token_length: tokens.access_token?.length || 0,
       refresh_token_updated: !!(tokens.refresh_token && tokens.refresh_token !== qboRefreshToken),
       expires_in: tokens.expires_in,
-      expires_in_hours: Math.floor(tokens.expires_in / 3600)
+      expires_in_hours: Math.floor(tokens.expires_in / 3600),
+      next_expiry: new Date(Date.now() + tokens.expires_in * 1000).toISOString()
     });
+    console.log('⏰ Next refresh should happen at:', new Date(Date.now() + 30 * 60 * 1000).toISOString(), '(30 min from now)');
 
     // Step 2: Update Vercel environment variables automatically
     let vercelUpdateSuccess = false;
