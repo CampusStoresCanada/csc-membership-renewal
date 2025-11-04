@@ -600,31 +600,29 @@
                                 Your CSC membership has been successfully renewed for the 2025-2026 year.
                             </p>
 
-                            <div style="margin: 40px 0 30px 0;">
-                                <h2 style="font-size: 24px; margin-bottom: 20px; color: #333;">Choose Your Payment Method</h2>
+                            <div style="margin: 50px auto; max-width: 600px;">
+                                <h2 style="font-size: 22px; margin-bottom: 30px; color: #333; text-align: center;">Choose Your Payment Method</h2>
 
-                                <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+                                <div style="display: flex; flex-direction: column; gap: 16px;">
                                     <!-- Invoice Payment Option -->
-                                    <div style="flex: 1; min-width: 280px; max-width: 400px; border: 2px solid #0071bc; border-radius: 8px; padding: 24px; background: #f8f9fa;">
-                                        <h3 style="font-size: 20px; margin-bottom: 12px; color: #0071bc;">📄 Pay via Invoice</h3>
-                                        <p style="margin-bottom: 20px; font-size: 15px; color: #666;">
-                                            View or email your invoice to accounts payable
-                                        </p>
-                                        <button onclick="openInvoiceForPayment()" class="next-btn" style="width: 100%; margin: 0;">
-                                            Open Invoice
-                                        </button>
-                                    </div>
+                                    <button onclick="openInvoiceForPayment()" class="next-btn" style="width: 100%; margin: 0; padding: 20px; text-align: left; display: flex; align-items: center; gap: 16px; background: white; border: 2px solid #dee2e6; cursor: pointer;">
+                                        <span style="font-size: 32px;">📄</span>
+                                        <div style="flex: 1;">
+                                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px; color: #333;">Pay via Invoice</div>
+                                            <div style="font-size: 14px; color: #666;">View or email your invoice to accounts payable</div>
+                                        </div>
+                                        <span style="font-size: 20px; color: #999;">→</span>
+                                    </button>
 
                                     <!-- Credit Card Payment Option -->
-                                    <div style="flex: 1; min-width: 280px; max-width: 400px; border: 2px solid #28a745; border-radius: 8px; padding: 24px; background: #f8f9fa;">
-                                        <h3 style="font-size: 20px; margin-bottom: 12px; color: #28a745;">💳 Pay with Credit Card</h3>
-                                        <p style="margin-bottom: 20px; font-size: 15px; color: #666;">
-                                            Pay now with credit card via secure payment portal
-                                        </p>
-                                        <button onclick="openCreditCardPayment()" class="next-btn" style="width: 100%; margin: 0; background-color: #28a745; border-color: #28a745;">
-                                            Pay Now
-                                        </button>
-                                    </div>
+                                    <button onclick="openCreditCardPayment()" class="next-btn" style="width: 100%; margin: 0; padding: 20px; text-align: left; display: flex; align-items: center; gap: 16px; cursor: pointer;">
+                                        <span style="font-size: 32px;">💳</span>
+                                        <div style="flex: 1;">
+                                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px; color: #333;">Pay with Credit Card</div>
+                                            <div style="font-size: 14px; color: #666;">Pay now via secure payment portal</div>
+                                        </div>
+                                        <span style="font-size: 20px; color: #999;">→</span>
+                                    </button>
                                 </div>
                             </div>
 
@@ -3124,21 +3122,32 @@
 
         // Open invoice for viewing/emailing (called from success page)
         function openInvoiceForPayment() {
+            console.log('🔘 Invoice button clicked!');
+            console.log('📊 Available data:', {
+                qboInvoiceUrl: window.qboInvoiceUrl,
+                qboInvoiceResult: window.qboInvoiceResult
+            });
+
             const invoiceUrl = window.qboInvoiceUrl || window.qboInvoiceResult?.invoiceUrl || window.qboInvoiceResult?.paymentLink;
             if (invoiceUrl) {
                 console.log('📄 Opening QuickBooks invoice:', invoiceUrl);
                 window.open(invoiceUrl, '_blank');
             } else {
+                console.error('❌ No invoice URL available');
                 alert('Invoice link not available. Please contact support.');
             }
         }
 
         // Open credit card payment portal (called from success page)
         function openCreditCardPayment() {
+            console.log('🔘 Credit card button clicked!');
+            console.log('📊 Available data:', { qboInvoiceResult: window.qboInvoiceResult });
+
             if (window.qboInvoiceResult && window.qboInvoiceResult.paymentLink) {
                 console.log('💳 Opening credit card payment portal:', window.qboInvoiceResult.paymentLink);
                 window.open(window.qboInvoiceResult.paymentLink, '_blank');
             } else {
+                console.error('❌ No payment link available');
                 alert('Payment link not available. Please ensure online payments are enabled in QuickBooks or contact support.');
             }
         }
