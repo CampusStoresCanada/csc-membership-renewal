@@ -48,11 +48,16 @@ Before going live, you **MUST** set these environment variables in your Vercel p
    - System errors and stack traces
    - Action-required notifications
 
-3. **`AWS_SES_SENDER_EMAIL`** (Should Already Be Set)
-   - **What:** Verified sender email address for AWS SES
+3. **`RESEND_API_KEY`** (NEW - Required)
+   - **What:** API key from Resend for sending emails
+   - **Get it from:** https://resend.com/api-keys
+   - **Important:** Must create account and verify domain first
+
+4. **`RESEND_SENDER_EMAIL`** (Should Already Be Set)
+   - **What:** Sender email address from verified domain
    - **Example:** `noreply@campusstores.ca`
    - **Default if not set:** `noreply@campusstores.ca`
-   - **Important:** This email **MUST** be verified in AWS SES
+   - **Important:** Domain must be verified in Resend
 
 ### How to Set Environment Variables in Vercel
 
@@ -60,33 +65,36 @@ Before going live, you **MUST** set these environment variables in your Vercel p
 # Via Vercel Dashboard:
 1. Go to: https://vercel.com/[your-team]/csc-membership-renewal/settings/environment-variables
 2. Add/Update the following variables:
+   - RESEND_API_KEY = [your resend api key from https://resend.com/api-keys]
+   - RESEND_SENDER_EMAIL = noreply@campusstores.ca
    - BOOKKEEPER_EMAIL = [your bookkeeper email]
    - ERROR_NOTIFICATION_EMAIL = [your admin email]
-   - AWS_SES_SENDER_EMAIL = noreply@campusstores.ca
 
 # Or via Vercel CLI:
+vercel env add RESEND_API_KEY production
+vercel env add RESEND_SENDER_EMAIL production
 vercel env add BOOKKEEPER_EMAIL production
 vercel env add ERROR_NOTIFICATION_EMAIL production
-vercel env add AWS_SES_SENDER_EMAIL production
 ```
 
 ---
 
 ## 🔍 **RECOMMENDED** - Pre-Launch Verification
 
-### 1. AWS SES Configuration
-- [ ] Verify that `noreply@campusstores.ca` (or your sender email) is verified in AWS SES
-  - Go to: https://console.aws.amazon.com/ses/
-  - Check: SES → Verified Identities → Look for your sender email
+### 1. Resend Email Configuration
+- [ ] Create Resend account: https://resend.com/
+  - Free tier: 100 emails/day, 3,000/month (should be plenty)
 
-- [ ] Check if AWS SES is in **Production Mode** (not Sandbox)
-  - **Sandbox Mode:** Can only send to verified emails
-  - **Production Mode:** Can send to any email address
-  - To check: AWS SES → Account Dashboard → Look for "Sending Status"
+- [ ] Add and verify your domain in Resend
+  - Go to: https://resend.com/domains
+  - Add domain: `campusstores.ca`
+  - Add DNS records to your domain provider (takes ~5 minutes)
+  - Wait for verification (usually instant, max 30 minutes)
 
-- [ ] If in Sandbox Mode, request production access:
-  - AWS SES → Account Dashboard → "Request production access"
-  - Or continue in sandbox (all customer emails must be verified first)
+- [ ] Create API key in Resend
+  - Go to: https://resend.com/api-keys
+  - Create API Key → Copy to `RESEND_API_KEY` in Vercel
+  - **No sandbox mode!** Once domain is verified, you can send to anyone!
 
 ### 2. QuickBooks Configuration
 - [ ] Confirm `QBO_BASE_URL=https://quickbooks.api.intuit.com` (production, not sandbox)
@@ -151,9 +159,9 @@ vercel env add AWS_SES_SENDER_EMAIL production
 
 Before going live, confirm:
 
-- [x] **Code Changes Complete:** Test email overrides removed ✅
-- [ ] **Environment Variables Set:** `BOOKKEEPER_EMAIL`, `ERROR_NOTIFICATION_EMAIL`, `AWS_SES_SENDER_EMAIL`
-- [ ] **AWS SES Verified:** Sender email verified (and production mode enabled if needed)
+- [x] **Code Changes Complete:** Test email overrides removed, migrated to Resend ✅
+- [ ] **Environment Variables Set:** `RESEND_API_KEY`, `RESEND_SENDER_EMAIL`, `BOOKKEEPER_EMAIL`, `ERROR_NOTIFICATION_EMAIL`
+- [ ] **Resend Configured:** Domain verified, API key created
 - [ ] **QuickBooks Connected:** Token refresh working, using production credentials
 - [ ] **Stripe Live Mode:** Using live keys, webhook configured
 - [ ] **Test Flow Passed:** End-to-end test completed successfully (optional but recommended)
@@ -176,7 +184,7 @@ Once all items above are checked:
 
 - **QuickBooks Issues:** Check `/api/diagnose-qb` for diagnostics
 - **Stripe Issues:** Check Stripe Dashboard → Developers → Logs
-- **Email Issues:** Check AWS SES → Sending Statistics
+- **Email Issues:** Check Resend Dashboard → Logs (https://resend.com/logs)
 - **General Errors:** Check Vercel → Functions → Logs
 
 ---

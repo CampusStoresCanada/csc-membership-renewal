@@ -4,8 +4,8 @@
   "description": "CSC Membership Renewal System",
   "type": "module",
   "dependencies": {
-    "@aws-sdk/client-ses": "^3.679.0",
     "@notionhq/client": "^2.2.15",
+    "resend": "^6.4.1",
     "stripe": "^19.2.0"
   },
   "engines": {

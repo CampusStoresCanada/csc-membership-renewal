@@ -49,29 +49,31 @@ S3_BUCKET_NAME=<your_s3_bucket_name>
 S3_REGION=<aws_region>
 ```
 
-### For SES Email Notifications (NEW)
+### For Resend Email Service (Replaces AWS SES)
 ```bash
-AWS_SES_REGION=<aws_ses_region>
-AWS_SES_SENDER_EMAIL=<verified_sender_email>
+RESEND_API_KEY=<your_resend_api_key>
+RESEND_SENDER_EMAIL=<verified_sender_email>
 ERROR_NOTIFICATION_EMAIL=<admin_email_for_errors>
 BOOKKEEPER_EMAIL=<bookkeeper_email_for_invoice_coding>
 ```
 
 **Notes:**
-- `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are shared for both S3 and SES
-- `AWS_SES_REGION` defaults to `S3_REGION` if not set
-- `AWS_SES_SENDER_EMAIL` must be a **verified email** or domain in AWS SES (e.g., `noreply@campusstores.ca`)
-- `ERROR_NOTIFICATION_EMAIL` defaults to `steve@campusstores.ca` if not set (receives Notion sync errors)
-- `BOOKKEEPER_EMAIL` defaults to `ERROR_NOTIFICATION_EMAIL` if not set (receives QuickBooks invoice coding instructions)
-- **SES Sandbox Mode**: If your SES account is in sandbox, both sender and recipient must be verified
+- `RESEND_API_KEY` - Get from https://resend.com/api-keys (required)
+- `RESEND_SENDER_EMAIL` - Sender email with verified domain (e.g., `noreply@campusstores.ca`)
+- `ERROR_NOTIFICATION_EMAIL` - Defaults to `steve@campusstores.ca` if not set (receives Notion sync errors)
+- `BOOKKEEPER_EMAIL` - Defaults to `ERROR_NOTIFICATION_EMAIL` if not set (receives QuickBooks invoice coding instructions)
+- **No sandbox mode** - Just add your domain and verify it, then send to anyone!
 
-### Setting up AWS SES:
-1. Go to AWS SES Console: https://console.aws.amazon.com/ses/
-2. **Verify sender email**: SES → Verified Identities → Create Identity
-3. **Verify recipient email** (if in sandbox): Same process as above
-4. **Request production access** (optional): SES → Account Dashboard → Request Production Access
+### Setting up Resend:
+1. Go to Resend: https://resend.com/
+2. **Create account** (free tier: 100 emails/day, 3,000/month)
+3. **Add your domain**: Domains → Add Domain → `campusstores.ca`
+4. **Verify domain**: Add DNS records provided by Resend (takes ~5 min)
+5. **Create API key**: API Keys → Create API Key → Copy key to `RESEND_API_KEY`
+6. **Done!** No sandbox mode, no email verification needed - just works!
 
-**Cost:** ~$0.10 per 1,000 emails (very cheap!)
+**Cost:** Free for 3,000 emails/month, then $20/month for 50,000 emails
+**Why Resend:** Simpler than AWS SES, no sandbox mode, better developer experience
 
 ## Vercel Configuration (for Auto Token Refresh)
 
@@ -95,7 +97,7 @@ VERCEL_PROJECT_ID=<your_vercel_project_id>
 
 ### Full Production Setup (Recommended)
 - [ ] All minimal setup variables
-- [ ] AWS SES email variables (4 variables: AWS_SES_REGION, AWS_SES_SENDER_EMAIL, ERROR_NOTIFICATION_EMAIL, BOOKKEEPER_EMAIL)
+- [ ] Resend email variables (4 variables: RESEND_API_KEY, RESEND_SENDER_EMAIL, ERROR_NOTIFICATION_EMAIL, BOOKKEEPER_EMAIL)
 - [ ] Vercel auto-refresh variables (2 variables)
 
 ### Optional (Already Has Defaults)
@@ -127,12 +129,12 @@ curl https://your-app.vercel.app/api/create-qbo-invoice \
   -d '{"test": true}'
 ```
 
-### Test AWS SES Email
+### Test Resend Email
 ```bash
-curl https://your-app.vercel.app/api/sync-membership-renewal \
+curl https://your-app.vercel.app/api/send-error-notification \
   -X POST \
   -H "Content-Type: application/json" \
-  -d '{"test_error": true}'
+  -d '{"error": "Test error", "details": "Testing Resend integration", "organizationName": "Test Org", "timestamp": "2025-11-04T12:00:00Z"}'
 ```
 
 Check your `ERROR_NOTIFICATION_EMAIL` inbox for the test email.
@@ -144,10 +146,11 @@ Check your `ERROR_NOTIFICATION_EMAIL` inbox for the test email.
 - Verify `QBO_REFRESH_TOKEN` hasn't expired (>101 days old)
 - Re-run OAuth flow to get new tokens
 
-### AWS SES Errors: "Email address not verified"
-- Verify sender email in AWS SES Console
-- If in sandbox mode, verify recipient email too
-- Request production access to send to any email
+### Resend Errors: "Domain not verified" or "Invalid from address"
+- Add and verify your domain in Resend dashboard
+- Make sure DNS records are added correctly
+- Wait ~5 minutes for DNS propagation
+- Sender email must be from verified domain (e.g., `noreply@campusstores.ca`)
 
 ### Notion 401 Errors
 - Check `NOTION_TOKEN` is valid

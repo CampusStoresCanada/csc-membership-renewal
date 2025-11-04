@@ -1,26 +1,26 @@
-// api/lib/ses-mailer.js - AWS SES Email Sending Utility
-import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
+// api/lib/ses-mailer.js - Email Sending Utility (now using Resend)
+import { Resend } from 'resend';
 
 /**
- * Send an email using AWS SES
+ * Send an email using Resend
  * @param {Object} options - Email options
  * @param {string} options.to - Recipient email address
  * @param {string} options.subject - Email subject
  * @param {string} options.body - Email body (plain text)
- * @param {string} options.from - Sender email address (must be verified in SES)
+ * @param {string} options.from - Sender email address
  * @returns {Promise<Object>} - Result object with success status
  */
 export async function sendEmail({ to, subject, body, from }) {
-  // Get AWS credentials from environment variables
-  const region = process.env.AWS_SES_REGION || process.env.S3_REGION || 'us-east-1';
-  const senderEmail = from || process.env.AWS_SES_SENDER_EMAIL || 'noreply@campusstores.ca';
+  // Get Resend API key from environment
+  const resendApiKey = process.env.RESEND_API_KEY;
+  const senderEmail = from || process.env.RESEND_SENDER_EMAIL || 'noreply@campusstores.ca';
 
   // Validate required environment variables
-  if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
-    console.error('❌ Missing AWS credentials for SES');
+  if (!resendApiKey) {
+    console.error('❌ Missing RESEND_API_KEY');
     return {
       success: false,
-      error: 'AWS credentials not configured'
+      error: 'Resend API key not configured'
     };
   }
 
@@ -33,61 +33,39 @@ export async function sendEmail({ to, subject, body, from }) {
   }
 
   try {
-    console.log(`📧 Sending email via AWS SES to: ${to}`);
+    console.log(`📧 Sending email via Resend to: ${to}`);
     console.log(`📧 Subject: ${subject}`);
-    console.log(`📧 Region: ${region}`);
+    console.log(`📧 From: ${senderEmail}`);
 
-    // Create SES client
-    const sesClient = new SESClient({
-      region: region,
-      credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-      }
-    });
-
-    // Prepare email parameters
-    const params = {
-      Source: senderEmail,
-      Destination: {
-        ToAddresses: [to]
-      },
-      Message: {
-        Subject: {
-          Data: subject,
-          Charset: 'UTF-8'
-        },
-        Body: {
-          Text: {
-            Data: body,
-            Charset: 'UTF-8'
-          }
-        }
-      }
-    };
+    // Create Resend client
+    const resend = new Resend(resendApiKey);
 
     // Send email
-    const command = new SendEmailCommand(params);
-    const response = await sesClient.send(command);
+    const response = await resend.emails.send({
+      from: senderEmail,
+      to: to,
+      subject: subject,
+      text: body
+    });
 
-    console.log('✅ Email sent successfully via AWS SES');
-    console.log('📧 Message ID:', response.MessageId);
+    console.log('✅ Email sent successfully via Resend');
+    console.log('📧 Message ID:', response.data?.id || response.id);
 
     return {
       success: true,
-      messageId: response.MessageId
+      messageId: response.data?.id || response.id
     };
 
   } catch (error) {
-    console.error('❌ Failed to send email via AWS SES:', error);
+    console.error('❌ Failed to send email via Resend:', error);
 
-    // Check for common SES errors
-    if (error.name === 'MessageRejected') {
-      console.error('💥 Email rejected - check that sender email is verified in SES');
-    } else if (error.name === 'MailFromDomainNotVerified') {
-      console.error('💥 Domain not verified in SES');
-    } else if (error.name === 'ConfigurationSetDoesNotExist') {
-      console.error('💥 SES configuration set not found');
+    // Check for common Resend errors
+    if (error.message?.includes('Invalid API key')) {
+      console.error('💥 Invalid Resend API key - check RESEND_API_KEY env var');
+    } else if (error.message?.includes('Invalid from address')) {
+      console.error('💥 Invalid sender email - must use verified domain');
+    } else if (error.message?.includes('rate limit')) {
+      console.error('💥 Resend rate limit exceeded');
     }
 
     return {
