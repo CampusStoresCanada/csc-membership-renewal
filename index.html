@@ -1472,8 +1472,9 @@
                 // Create Stripe checkout (works even if QB failed)
                 const stripeResult = await createStripeCheckout();
 
+                // SKIP QB retry logic - we have Stripe working, that's what matters
                 // Check if QB needs to retry due to token expiry
-                if (qboResult && qboResult.needsRetry) {
+                if (false && qboResult && qboResult.needsRetry) {
                     const retrySeconds = qboResult.retryAfter || 10;
                     console.log(`⏳ Retrying in ${retrySeconds} seconds...`);
 
