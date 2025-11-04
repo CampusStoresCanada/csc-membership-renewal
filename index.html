@@ -1459,6 +1459,16 @@
                     `;
                 }
 
+                // CRITICAL: Open payment window NOW (during user click event) to bypass popup blockers
+                // We'll navigate it to the actual URL after API calls complete
+                console.log('🪟 Opening payment window (will navigate after API calls)...');
+                const paymentWindow = window.open('about:blank', '_blank');
+                if (!paymentWindow) {
+                    alert('⚠️ Popup blocker detected! Please allow popups for this site and try again.');
+                    closeInvoiceModal();
+                    return;
+                }
+
                 // Try to create QuickBooks invoice first (for bookkeeping)
                 // But don't let QB failures block Stripe payment
                 let qboResult = null;
@@ -1575,22 +1585,24 @@
                 // Close modal
                 closeInvoiceModal();
 
-                // Open Stripe checkout for payment (QB invoice is for bookkeeping only)
+                // Navigate the pre-opened payment window to Stripe (or QB fallback)
                 console.log('🔍 DEBUG: Payment URL selection:');
                 console.log('  - Stripe URL:', window.stripeCheckoutUrl || 'NOT SET');
                 console.log('  - QB URL:', window.qboInvoiceUrl || 'NOT SET');
 
                 if (window.stripeCheckoutUrl) {
-                    console.log('✅ OPENING STRIPE CHECKOUT:', window.stripeCheckoutUrl);
-                    window.open(window.stripeCheckoutUrl, '_blank');
+                    console.log('✅ NAVIGATING TO STRIPE CHECKOUT:', window.stripeCheckoutUrl);
+                    paymentWindow.location.href = window.stripeCheckoutUrl;
                 } else {
                     console.error('❌ No Stripe checkout URL available');
                     // Fallback to QB if Stripe failed
                     if (window.qboInvoiceUrl) {
-                        console.log('⚠️ OPENING QB FALLBACK:', window.qboInvoiceUrl);
-                        window.open(window.qboInvoiceUrl, '_blank');
+                        console.log('⚠️ NAVIGATING TO QB FALLBACK:', window.qboInvoiceUrl);
+                        paymentWindow.location.href = window.qboInvoiceUrl;
                     } else {
                         console.error('❌ NO PAYMENT URLS AVAILABLE AT ALL!');
+                        paymentWindow.close();
+                        alert('Unable to create payment checkout. Please try again or contact support.');
                     }
                 }
 
@@ -1600,7 +1612,7 @@
                 // Start background Notion sync (don't await it)
                 backgroundNotionSync();
 
-                console.log('✅ QuickBooks invoice created and opened in new tab');
+                console.log('✅ Payment checkout ready - Stripe checkout opened in new tab (QB invoice for bookkeeping)');
 
             } catch (error) {
                 console.error('❌ Sync failed:', error);
