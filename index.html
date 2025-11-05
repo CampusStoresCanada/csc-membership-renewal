@@ -3916,10 +3916,30 @@
             if (!checkbox) return;
 
             if (teamState.attendingContacts.has(contactId)) {
+                // Unchecking - allow this
                 teamState.attendingContacts.delete(contactId);
                 checkbox.classList.remove('checked');
                 console.log(`👤 Marked ${contactId} as NOT attending`);
             } else {
+                // Checking - validate dietary restrictions first
+                let contact = organizationContacts ? organizationContacts.find(c => c.id === contactId) : null;
+
+                if (!contact && teamState.newContacts) {
+                    contact = teamState.newContacts.find(c => c.id === contactId);
+                }
+
+                if (contact) {
+                    const dietary = contact.dietaryRestrictions || '';
+                    if (!dietary.trim()) {
+                        alert(
+                            `${contact.name} is missing dietary restrictions.\n\n` +
+                            `Please add dietary restrictions before marking them as attending the conference. If none, please indicate "None".\n\n` +
+                            `Click the pencil icon next to their name to edit.`
+                        );
+                        return; // Don't check the box
+                    }
+                }
+
                 teamState.attendingContacts.add(contactId);
                 checkbox.classList.add('checked');
                 console.log(`✅ Marked ${contactId} as attending`);
