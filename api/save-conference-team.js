@@ -97,7 +97,7 @@ export default async function handler(req, res) {
                 rich_text: [{ text: { content: newContact.roleTitle || '' } }]
               },
               "Contact Type": {
-                multi_select: [{ name: "Vendor Partner" }]
+                multi_select: [{ name: "Member" }]
               },
               "Organization": {
                 relation: [{ id: organizationId }]
@@ -234,8 +234,15 @@ export default async function handler(req, res) {
     // Step 4: Handle DELETE operations (we'll mark as inactive rather than delete)
     if (contactOperations.delete && contactOperations.delete.length > 0) {
       console.log(`🗑️ Marking ${contactOperations.delete.length} contacts as inactive...`);
-      
+
       for (const contactId of contactOperations.delete) {
+        // Skip temporary IDs (from frontend before contact creation)
+        if (!contactId || contactId.startsWith('new_')) {
+          console.log(`⚠️ Skipping delete for temporary ID: ${contactId}`);
+          results.errors.push(`Skipped delete for temporary contact ID: ${contactId}. Contact was never created.`);
+          continue;
+        }
+
         try {
           const deleteData = {
             properties: {
