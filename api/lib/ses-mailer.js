@@ -84,7 +84,7 @@ export async function sendEmail({ to, subject, body, from }) {
  * @returns {Promise<Object>} - Result object with success status
  */
 export async function sendErrorNotification({ subject, body }) {
-  const adminEmail = process.env.ERROR_NOTIFICATION_EMAIL || 'steve@campusstores.ca';
+  const adminEmail = process.env.ERROR_NOTIFICATION_EMAIL || 'google@campusstores.ca';
 
   console.log(`🚨 Sending error notification to: ${adminEmail}`);
 
@@ -101,7 +101,7 @@ export async function sendErrorNotification({ subject, body }) {
  * @returns {Promise<Object>} - Result object with success status
  */
 export async function sendBookkeeperNotification(invoiceDetails) {
-  const bookkeeperEmail = process.env.BOOKKEEPER_EMAIL || process.env.ERROR_NOTIFICATION_EMAIL || 'steve@campusstores.ca';
+  const bookkeeperEmail = process.env.BOOKKEEPER_EMAIL || 'google@campusstores.ca';
 
   const {
     organizationName,

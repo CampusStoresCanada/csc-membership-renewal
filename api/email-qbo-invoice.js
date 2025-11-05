@@ -39,11 +39,9 @@ export default async function handler(req, res) {
       return;
     }
 
-    // TEST MODE: Send all emails to google@campusstores.ca for testing
-    const testEmailOverride = 'google@campusstores.ca';
-    const recipientEmail = testEmailOverride;
+    const recipientEmail = customerEmail;
 
-    console.log('📧 Sending QuickBooks invoice email (TEST OVERRIDE):', {
+    console.log('📧 Sending QuickBooks invoice email:', {
       invoiceId,
       recipientEmail,
       organizationName
@@ -201,11 +199,9 @@ async function retryEmailSend(requestBody, newTokens) {
   const qboCompanyId = process.env.QBO_COMPANY_ID;
   const qboBaseUrl = process.env.QBO_BASE_URL || 'https://sandbox-quickbooks.api.intuit.com';
 
-  // TEST MODE: Send all emails to google@campusstores.ca for testing
-  const testEmailOverride = 'google@campusstores.ca';
-  const recipientEmail = testEmailOverride;
+  const recipientEmail = customerEmail;
 
-  console.log('🔄 Retrying email send with fresh tokens (TEST OVERRIDE)...', {
+  console.log('🔄 Retrying email send with fresh tokens...', {
     invoiceId,
     recipientEmail
   });

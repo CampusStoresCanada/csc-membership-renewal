@@ -69,11 +69,32 @@ export default async function handler(req, res) {
       if (notion_token) {
         console.log('💾 Updating Notion with payment confirmation...');
         try {
-          await updateNotionWithPayment(notion_token, session.id, session.payment_intent);
+          await updateNotionWithPayment(notion_token, session.id, session.payment_intent, organization_name);
           console.log('✅ Notion updated with payment info');
         } catch (notionError) {
           console.error('⚠️ Failed to update Notion:', notionError);
-          // Continue processing - this is not critical
+
+          // Send error notification - this is critical!
+          try {
+            await sendErrorNotification({
+              subject: 'Stripe Webhook - Failed to Update Notion',
+              body: `Payment was successful but failed to update Notion with payment confirmation.\n\nOrganization: ${organization_name}\nStripe Session ID: ${session.id}\nPayment Intent: ${session.payment_intent}\nAmount: $${session.amount_total / 100} ${session.currency.toUpperCase()}\nCustomer Email: ${session.customer_email}\n\nError: ${notionError.message}\n\nAction Required:\nManually update Notion page and add "25/26 Member" tag for ${organization_name}.`
+            });
+          } catch (emailError) {
+            console.error('❌ Failed to send error notification:', emailError);
+          }
+        }
+      } else {
+        // CRITICAL: No notion_token in metadata - can't update Notion!
+        console.error('❌ No notion_token in Stripe session metadata!');
+
+        try {
+          await sendErrorNotification({
+            subject: 'CRITICAL: Stripe Webhook - No Notion Token',
+            body: `Payment was successful but NO Notion token was found in the session metadata.\n\nOrganization: ${organization_name}\nStripe Session ID: ${session.id}\nPayment Intent: ${session.payment_intent}\nAmount: $${session.amount_total / 100} ${session.currency.toUpperCase()}\nCustomer Email: ${session.customer_email}\n\nThis means the organization CANNOT be automatically tagged as "25/26 Member".\n\nPossible causes:\n1. Notion token not passed when creating Stripe checkout session\n2. Metadata configuration error in checkout flow\n\nAction Required:\n1. Manually find ${organization_name} in Notion\n2. Add "25/26 Member" tag\n3. Update Payment Status to "Paid"\n4. Add Stripe Payment Intent: ${session.payment_intent}\n5. Investigate why notion_token was missing from metadata`
+          });
+        } catch (emailError) {
+          console.error('❌ Failed to send error notification:', emailError);
         }
       }
 
@@ -146,7 +167,7 @@ async function getRawBody(req) {
 }
 
 // Update Notion page with payment confirmation and add member tag
-async function updateNotionWithPayment(token, sessionId, paymentIntentId) {
+async function updateNotionWithPayment(token, sessionId, paymentIntentId, organizationName) {
   const notionApiKey = process.env.NOTION_API_KEY;
 
   if (!notionApiKey) {
@@ -167,6 +188,20 @@ async function updateNotionWithPayment(token, sessionId, paymentIntentId) {
 
   if (!getResponse.ok) {
     const errorText = await getResponse.text();
+
+    // Send detailed error notification for fetch failures
+    if (getResponse.status === 404) {
+      await sendErrorNotification({
+        subject: 'Stripe Webhook - Notion Page Not Found',
+        body: `Payment was successful but the Notion page could not be found.\n\nOrganization: ${organizationName}\nNotion Token/Page ID: ${pageId}\nStripe Session ID: ${sessionId}\nPayment Intent: ${paymentIntentId}\n\nPossible causes:\n1. Page was deleted from Notion\n2. Invalid token was passed to Stripe\n3. Notion API key doesn't have access to this page\n\nAction Required:\nManually add "25/26 Member" tag to ${organizationName} in Notion.`
+      });
+    } else {
+      await sendErrorNotification({
+        subject: 'Stripe Webhook - Notion Fetch Failed',
+        body: `Payment was successful but failed to fetch Notion page.\n\nOrganization: ${organizationName}\nNotion Token/Page ID: ${pageId}\nStripe Session ID: ${sessionId}\nPayment Intent: ${paymentIntentId}\nHTTP Status: ${getResponse.status}\n\nError: ${errorText}\n\nAction Required:\nManually add "25/26 Member" tag to ${organizationName} in Notion.`
+      });
+    }
+
     throw new Error(`Notion fetch failed: ${getResponse.status} - ${errorText}`);
   }
 
@@ -220,8 +255,17 @@ async function updateNotionWithPayment(token, sessionId, paymentIntentId) {
 
   if (!response.ok) {
     const errorText = await response.text();
+
+    // Send detailed error notification for update failures
+    await sendErrorNotification({
+      subject: 'Stripe Webhook - Failed to Update Notion Page',
+      body: `Payment was successful but failed to update the Notion page with payment info and "25/26 Member" tag.\n\nOrganization: ${organizationName}\nNotion Page ID: ${pageId}\nStripe Session ID: ${sessionId}\nPayment Intent: ${paymentIntentId}\nHTTP Status: ${response.status}\n\nError: ${errorText}\n\nTags to add: ${updatedTags.map(t => t.name).join(', ')}\n\nAction Required:\n1. Manually update payment status to "Paid" for ${organizationName}\n2. Manually add "25/26 Member" tag if not already present\n3. Add Stripe Payment Intent: ${paymentIntentId || sessionId}\n4. Set Payment Date to today's date`
+    });
+
     throw new Error(`Notion update failed: ${response.status} - ${errorText}`);
   }
+
+  console.log(`🎉 Successfully updated Notion page for ${organizationName} with "25/26 Member" tag!`);
 
   return await response.json();
 }
