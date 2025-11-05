@@ -2721,9 +2721,21 @@
                     }
 
                     if (contact) {
-                        const dietary = contact.dietaryRestrictions || '';
+                        // Check for edited dietary restrictions first (user may have just edited)
+                        let dietary = '';
+                        if (teamState.editedContacts && teamState.editedContacts[contactId]) {
+                            // Use edited data if available
+                            dietary = teamState.editedContacts[contactId].dietary || '';
+                        } else {
+                            // Fall back to original contact data
+                            dietary = contact.dietaryRestrictions || '';
+                        }
+
                         if (!dietary.trim()) {
-                            attendeesWithoutDietary.push(contact.name);
+                            const contactName = (teamState.editedContacts && teamState.editedContacts[contactId])
+                                ? teamState.editedContacts[contactId].name
+                                : contact.name;
+                            attendeesWithoutDietary.push(contactName);
                         }
                     }
                 });
