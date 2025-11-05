@@ -92,7 +92,7 @@ export default async function handler(req, res) {
       success: true,
       message: 'Invoice email sent successfully',
       invoiceId: invoiceId,
-      emailAddress: testEmailAddress,
+      emailAddress: recipientEmail,
       originalCustomerEmail: customerEmail,
       organizationName: organizationName,
       qbResponse: sendResult
@@ -236,7 +236,7 @@ async function retryEmailSend(requestBody, newTokens) {
     success: true,
     message: 'Invoice email sent successfully (after token refresh)',
     invoiceId: invoiceId,
-    emailAddress: testEmailAddress,
+    emailAddress: recipientEmail,
     originalCustomerEmail: customerEmail,
     organizationName: organizationName,
     qbResponse: sendResult,
