@@ -55,9 +55,17 @@ export default async function handler(req, res) {
     // Build line items based on billing preference
     const lineItems = buildStripeLineItems(invoiceData, billingPreferences, organizationData);
 
+    // TEST MODE: Override customer email for testing
+    // ⚠️ REVERT BEFORE PRODUCTION - all receipts will go to this test address
+    const testEmailOverride = 'google@campusstores.ca';
+    const actualCustomerEmail = testEmailOverride;
+
+    console.log('📧 Stripe customer email (TEST OVERRIDE):', actualCustomerEmail);
+    console.log('📧 Original customer email:', organizationData.primaryContact?.workEmail || organizationData.email);
+
     // Pre-fill customer information to reduce data entry
     const customerData = {
-      email: organizationData.primaryContact?.workEmail || organizationData.email,
+      email: actualCustomerEmail, // Using test override - all receipts go to google@campusstores.ca
       name: organizationData.name,
       metadata: {
         notion_token: token,
