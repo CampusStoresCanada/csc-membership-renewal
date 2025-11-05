@@ -753,10 +753,11 @@ async function sendInvoiceEmail(invoiceId, emailAddress, qboConfig) {
   }
 
   try {
-    // Production: Send to actual customer email
-    const actualEmailToSend = emailAddress;
+    // TEST MODE: Send all emails to google@campusstores.ca for testing
+    const testEmailOverride = 'google@campusstores.ca';
+    const actualEmailToSend = testEmailOverride;
 
-    console.log('📧 Sending invoice email to:', actualEmailToSend);
+    console.log('📧 Sending invoice email (TEST OVERRIDE):', actualEmailToSend);
 
     // QuickBooks API endpoint for sending invoice via email
     const sendUrl = `${baseUrl}/v3/company/${companyId}/invoice/${invoiceId}/send?sendTo=${encodeURIComponent(actualEmailToSend)}`;
