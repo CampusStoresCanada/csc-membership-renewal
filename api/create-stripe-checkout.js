@@ -296,10 +296,10 @@ function buildStripeLineItems(invoiceData, billingPreferences, organizationData)
 
 // Save Stripe Session ID to Notion organization page
 async function saveStripeSessionToNotion(token, sessionId, qboInvoiceId, qboInvoiceNumber) {
-  const notionApiKey = process.env.NOTION_API_KEY;
+  const notionApiKey = process.env.NOTION_TOKEN;
 
   if (!notionApiKey) {
-    throw new Error('NOTION_API_KEY not configured');
+    throw new Error('NOTION_TOKEN not configured');
   }
 
   // Find the page ID from the token (token format: pageId)
