@@ -152,7 +152,14 @@ export default async function handler(req, res) {
       for (const updateContact of contactOperations.update) {
         console.log(`🔄 Processing update for originalId: ${updateContact.originalId}`);
         console.log(`📝 New name will be: "${updateContact.name}"`);
-        
+
+        // Skip temporary IDs (from frontend before contact creation)
+        if (!updateContact.originalId || updateContact.originalId.startsWith('new_')) {
+          console.log(`⚠️ Skipping update for temporary ID: ${updateContact.originalId}`);
+          results.errors.push(`Skipped update for temporary contact ID: ${updateContact.originalId}. Contact should be in 'create' array instead.`);
+          continue;
+        }
+
         try {
           const updateData = {
             properties: {}
@@ -314,9 +321,10 @@ export default async function handler(req, res) {
       
       // Now process each team member
       for (const teamMember of contactOperations.conferenceTeam) {
-        if (!teamMember.id || teamMember.id === 'undefined') {
-          console.error(`❌ Invalid team member ID: ${teamMember.id}`);
-          results.errors.push(`Invalid team member ID: ${teamMember.id}`);
+        // Skip temporary IDs (from frontend before contact creation)
+        if (!teamMember.id || teamMember.id === 'undefined' || teamMember.id.startsWith('new_')) {
+          console.error(`❌ Invalid or temporary team member ID: ${teamMember.id}`);
+          results.errors.push(`Skipped team member with temporary ID: ${teamMember.id}. Contact should be created first.`);
           continue;
         }
         
