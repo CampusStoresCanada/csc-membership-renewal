@@ -155,7 +155,38 @@ async function updateNotionWithPayment(token, sessionId, paymentIntentId) {
 
   const pageId = token;
 
-  // Update with payment info and add "25/26 Member" tag
+  // First, fetch the current page to get existing tags
+  console.log('📖 Fetching current Notion page to preserve existing tags...');
+  const getResponse = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${notionApiKey}`,
+      'Notion-Version': '2022-06-28'
+    }
+  });
+
+  if (!getResponse.ok) {
+    const errorText = await getResponse.text();
+    throw new Error(`Notion fetch failed: ${getResponse.status} - ${errorText}`);
+  }
+
+  const currentPage = await getResponse.json();
+
+  // Get existing tags
+  const existingTags = currentPage.properties?.Tags?.multi_select || [];
+  console.log('🏷️ Existing tags:', existingTags.map(t => t.name).join(', '));
+
+  // Add "25/26 Member" tag if not already present
+  const memberTag = '25/26 Member';
+  const hasMembeTag = existingTags.some(tag => tag.name === memberTag);
+
+  const updatedTags = hasMembeTag
+    ? existingTags.map(tag => ({ name: tag.name }))
+    : [...existingTags.map(tag => ({ name: tag.name })), { name: memberTag }];
+
+  console.log('🏷️ Updated tags:', updatedTags.map(t => t.name).join(', '));
+
+  // Update with payment info and add "25/26 Member" tag (preserving existing tags)
   const response = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
     method: 'PATCH',
     headers: {
@@ -176,9 +207,7 @@ async function updateNotionWithPayment(token, sessionId, paymentIntentId) {
           }
         },
         'Tags': {
-          multi_select: [
-            { name: '25/26 Member' }
-          ]
+          multi_select: updatedTags
         },
         'Payment Date': {
           date: {
