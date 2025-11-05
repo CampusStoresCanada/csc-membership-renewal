@@ -1,6 +1,6 @@
 // api/stripe-webhook.js - Handle Stripe payment webhook events
 import Stripe from 'stripe';
-import { sendBookkeeperNotification } from './lib/ses-mailer.js';
+import { sendBookkeeperNotification, sendErrorNotification } from './lib/ses-mailer.js';
 
 export const config = {
   api: {
@@ -169,9 +169,14 @@ async function getRawBody(req) {
 // Update Notion page with payment confirmation and add member tag
 async function updateNotionWithPayment(token, sessionId, paymentIntentId, organizationName) {
   const notionApiKey = process.env.NOTION_TOKEN;
+  const tagSystemDbId = process.env.NOTION_TAG_SYSTEM_DB_ID;
 
   if (!notionApiKey) {
     throw new Error('NOTION_TOKEN not configured');
+  }
+
+  if (!tagSystemDbId) {
+    throw new Error('NOTION_TAG_SYSTEM_DB_ID not configured');
   }
 
   const pageId = token;
@@ -207,19 +212,64 @@ async function updateNotionWithPayment(token, sessionId, paymentIntentId, organi
 
   const currentPage = await getResponse.json();
 
-  // Get existing tags
-  const existingTags = currentPage.properties?.Tags?.multi_select || [];
-  console.log('🏷️ Existing tags:', existingTags.map(t => t.name).join(', '));
+  // Get existing tags (using Tag relation, not Tags multi_select)
+  const existingTags = currentPage.properties?.Tag?.relation || [];
+  console.log(`🏷️ Organization has ${existingTags.length} existing tags`);
 
-  // Add "25/26 Member" tag if not already present
-  const memberTag = '25/26 Member';
-  const hasMembeTag = existingTags.some(tag => tag.name === memberTag);
+  // Get the "25/26 Member" tag ID from Tag System database
+  console.log('🔍 Looking up "25/26 Member" tag from Tag System...');
+  const memberTagResponse = await fetch(`https://api.notion.com/v1/databases/${tagSystemDbId}/query`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${notionApiKey}`,
+      'Content-Type': 'application/json',
+      'Notion-Version': '2022-06-28'
+    },
+    body: JSON.stringify({
+      filter: {
+        property: 'Name',
+        title: {
+          equals: '25/26 Member'
+        }
+      }
+    })
+  });
 
-  const updatedTags = hasMembeTag
-    ? existingTags.map(tag => ({ name: tag.name }))
-    : [...existingTags.map(tag => ({ name: tag.name })), { name: memberTag }];
+  if (!memberTagResponse.ok) {
+    await sendErrorNotification({
+      subject: 'Stripe Webhook - Failed to Query Tag System',
+      body: `Payment was successful but failed to query Tag System database.\n\nOrganization: ${organizationName}\nStripe Session ID: ${sessionId}\nPayment Intent: ${paymentIntentId}\nHTTP Status: ${memberTagResponse.status}\n\nAction Required:\nManually add "25/26 Member" tag to ${organizationName} in Notion.`
+    });
+    throw new Error(`Failed to fetch member tag: ${memberTagResponse.status}`);
+  }
 
-  console.log('🏷️ Updated tags:', updatedTags.map(t => t.name).join(', '));
+  const memberTagData = await memberTagResponse.json();
+
+  if (memberTagData.results.length === 0) {
+    // CRITICAL ERROR - tag missing means ALL webhooks will fail!
+    await sendErrorNotification({
+      subject: 'CRITICAL: Stripe Webhook - "25/26 Member" Tag Missing',
+      body: `The "25/26 Member" tag was not found in the Notion Tag System database.\n\nThis is a CRITICAL error - all Stripe payment webhooks will fail until this is fixed!\n\nOrganization: ${organizationName}\nStripe Session ID: ${sessionId}\nPayment Intent: ${paymentIntentId}\n\nAction Required:\n1. Check that "25/26 Member" tag exists in Tag System database\n2. Verify tag name is exactly "25/26 Member" (case-sensitive)\n3. Manually add tag to any organizations that paid while this was broken`
+    });
+    throw new Error('"25/26 Member" tag not found in Tag System');
+  }
+
+  const memberTagId = memberTagData.results[0].id;
+  console.log(`🏷️ Found "25/26 Member" tag ID: ${memberTagId}`);
+
+  // Check if tag already exists
+  const hasTag = existingTags.some(tag => tag.id === memberTagId);
+
+  if (hasTag) {
+    console.log(`✅ Organization already has "25/26 Member" tag`);
+  } else {
+    console.log(`➕ Adding "25/26 Member" tag to ${organizationName}...`);
+  }
+
+  // Build updated tags array (preserve existing + add new if needed)
+  const updatedTags = hasTag
+    ? existingTags
+    : [...existingTags, { id: memberTagId }];
 
   // Update with payment info and add "25/26 Member" tag (preserving existing tags)
   const response = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
@@ -241,8 +291,8 @@ async function updateNotionWithPayment(token, sessionId, paymentIntentId, organi
             name: 'Paid'
           }
         },
-        'Tags': {
-          multi_select: updatedTags
+        'Tag': {
+          relation: updatedTags
         },
         'Payment Date': {
           date: {
@@ -259,7 +309,7 @@ async function updateNotionWithPayment(token, sessionId, paymentIntentId, organi
     // Send detailed error notification for update failures
     await sendErrorNotification({
       subject: 'Stripe Webhook - Failed to Update Notion Page',
-      body: `Payment was successful but failed to update the Notion page with payment info and "25/26 Member" tag.\n\nOrganization: ${organizationName}\nNotion Page ID: ${pageId}\nStripe Session ID: ${sessionId}\nPayment Intent: ${paymentIntentId}\nHTTP Status: ${response.status}\n\nError: ${errorText}\n\nTags to add: ${updatedTags.map(t => t.name).join(', ')}\n\nAction Required:\n1. Manually update payment status to "Paid" for ${organizationName}\n2. Manually add "25/26 Member" tag if not already present\n3. Add Stripe Payment Intent: ${paymentIntentId || sessionId}\n4. Set Payment Date to today's date`
+      body: `Payment was successful but failed to update the Notion page with payment info and "25/26 Member" tag.\n\nOrganization: ${organizationName}\nNotion Page ID: ${pageId}\nStripe Session ID: ${sessionId}\nPayment Intent: ${paymentIntentId}\nHTTP Status: ${response.status}\n\nError: ${errorText}\n\nAction Required:\n1. Manually update payment status to "Paid" for ${organizationName}\n2. Manually add "25/26 Member" tag if not already present\n3. Add Stripe Payment Intent: ${paymentIntentId || sessionId}\n4. Set Payment Date to today's date`
     });
 
     throw new Error(`Notion update failed: ${response.status} - ${errorText}`);
