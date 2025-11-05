@@ -168,10 +168,10 @@ async function getRawBody(req) {
 
 // Update Notion page with payment confirmation and add member tag
 async function updateNotionWithPayment(token, sessionId, paymentIntentId, organizationName) {
-  const notionApiKey = process.env.NOTION_API_KEY;
+  const notionApiKey = process.env.NOTION_TOKEN;
 
   if (!notionApiKey) {
-    throw new Error('NOTION_API_KEY not configured');
+    throw new Error('NOTION_TOKEN not configured');
   }
 
   const pageId = token;
