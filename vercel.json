@@ -1,4 +1,10 @@
 {
+  "rewrites": [
+    {
+      "source": "/success",
+      "destination": "/success.html"
+    }
+  ],
   "crons": [
     {
       "path": "/api/process-approved-submissions",
