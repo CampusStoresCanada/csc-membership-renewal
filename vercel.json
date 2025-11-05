@@ -7,10 +7,6 @@
   ],
   "crons": [
     {
-      "path": "/api/process-approved-submissions",
-      "schedule": "*/5 * * * *"
-    },
-    {
       "path": "/api/auto-refresh-qb-tokens",
       "schedule": "0 * * * *"
     },
