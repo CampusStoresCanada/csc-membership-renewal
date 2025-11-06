@@ -170,6 +170,7 @@ async function getRawBody(req) {
 async function updateNotionWithPayment(token, sessionId, paymentIntentId, organizationName) {
   const notionApiKey = process.env.NOTION_TOKEN;
   const tagSystemDbId = process.env.NOTION_TAG_SYSTEM_DB_ID;
+  const organizationsDbId = process.env.NOTION_ORGANIZATIONS_DB_ID;
 
   if (!notionApiKey) {
     throw new Error('NOTION_TOKEN not configured');
@@ -179,7 +180,47 @@ async function updateNotionWithPayment(token, sessionId, paymentIntentId, organi
     throw new Error('NOTION_TAG_SYSTEM_DB_ID not configured');
   }
 
-  const pageId = token;
+  if (!organizationsDbId) {
+    throw new Error('NOTION_ORGANIZATIONS_DB_ID not configured');
+  }
+
+  // Query for the organization by token to get the full page ID
+  console.log('🔍 Looking up organization page ID from token...');
+  const queryResponse = await fetch(`https://api.notion.com/v1/databases/${organizationsDbId}/query`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${notionApiKey}`,
+      'Content-Type': 'application/json',
+      'Notion-Version': '2022-06-28'
+    },
+    body: JSON.stringify({
+      filter: {
+        property: 'Token',
+        rich_text: { equals: token }
+      }
+    })
+  });
+
+  if (!queryResponse.ok) {
+    const errorText = await queryResponse.text();
+    await sendErrorNotification({
+      subject: 'Stripe Webhook - Failed to Query Organization',
+      body: `Payment was successful but failed to query Organizations database.\n\nOrganization: ${organizationName}\nToken: ${token}\nStripe Session ID: ${sessionId}\nPayment Intent: ${paymentIntentId}\nHTTP Status: ${queryResponse.status}\n\nError: ${errorText}\n\nAction Required:\nManually add "25/26 Member" tag to ${organizationName} in Notion.`
+    });
+    throw new Error(`Notion query failed: ${queryResponse.status} - ${errorText}`);
+  }
+
+  const queryData = await queryResponse.json();
+  if (queryData.results.length === 0) {
+    await sendErrorNotification({
+      subject: 'Stripe Webhook - Organization Not Found',
+      body: `Payment was successful but the organization could not be found in Notion.\n\nOrganization: ${organizationName}\nToken: ${token}\nStripe Session ID: ${sessionId}\nPayment Intent: ${paymentIntentId}\n\nAction Required:\nManually add "25/26 Member" tag to ${organizationName} in Notion.`
+    });
+    throw new Error(`Organization not found with token: ${token}`);
+  }
+
+  const pageId = queryData.results[0].id;
+  console.log(`✅ Found organization page ID: ${pageId}`);
 
   // First, fetch the current page to get existing tags
   console.log('📖 Fetching current Notion page to preserve existing tags...');

@@ -247,13 +247,13 @@ export default async function handler(req, res) {
           const deleteData = {
             properties: {
               "Contact Type": {
-                select: { name: "Inactive" }
+                multi_select: [{ name: "Inactive" }]
               },
               "Notes": {
-                rich_text: [{ 
-                  text: { 
-                    content: `Marked inactive during conference registration on ${new Date().toISOString().split('T')[0]}` 
-                  } 
+                rich_text: [{
+                  text: {
+                    content: `Marked inactive during conference registration on ${new Date().toISOString().split('T')[0]}`
+                  }
                 }]
               }
             }

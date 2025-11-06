@@ -297,13 +297,39 @@ function buildStripeLineItems(invoiceData, billingPreferences, organizationData)
 // Save Stripe Session ID to Notion organization page
 async function saveStripeSessionToNotion(token, sessionId, qboInvoiceId, qboInvoiceNumber) {
   const notionApiKey = process.env.NOTION_TOKEN;
+  const organizationsDbId = process.env.NOTION_ORGANIZATIONS_DB_ID;
 
-  if (!notionApiKey) {
-    throw new Error('NOTION_TOKEN not configured');
+  if (!notionApiKey || !organizationsDbId) {
+    throw new Error('NOTION_TOKEN or NOTION_ORGANIZATIONS_DB_ID not configured');
   }
 
-  // Find the page ID from the token (token format: pageId)
-  const pageId = token;
+  // Query for the organization by token to get the full page ID
+  const queryResponse = await fetch(`https://api.notion.com/v1/databases/${organizationsDbId}/query`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${notionApiKey}`,
+      'Content-Type': 'application/json',
+      'Notion-Version': '2022-06-28'
+    },
+    body: JSON.stringify({
+      filter: {
+        property: 'Token',
+        rich_text: { equals: token }
+      }
+    })
+  });
+
+  if (!queryResponse.ok) {
+    const errorText = await queryResponse.text();
+    throw new Error(`Notion query failed: ${queryResponse.status} - ${errorText}`);
+  }
+
+  const queryData = await queryResponse.json();
+  if (queryData.results.length === 0) {
+    throw new Error(`Organization not found with token: ${token}`);
+  }
+
+  const pageId = queryData.results[0].id;
 
   // Update the Notion page with Stripe Session ID
   const response = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
