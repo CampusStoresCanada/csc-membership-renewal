@@ -2139,6 +2139,7 @@ body::before {
     width: 90vw;
     max-width: 800px;
     max-height: 90vh;
+    height: 90vh;
     border-radius: 8px;
     overflow: hidden;
     display: flex;
@@ -2149,11 +2150,14 @@ body::before {
     display: flex;
     flex-direction: column;
     height: 100%;
+    overflow: hidden;
 }
 
 .invoice-document {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
     padding: 2rem;
     background: white;
     font-family: 'davis-sans', sans-serif;
