@@ -312,7 +312,7 @@ async function updateNotionWithPayment(token, sessionId, paymentIntentId, organi
     ? existingTags
     : [...existingTags, { id: memberTagId }];
 
-  // Update with payment info and add "25/26 Member" tag (preserving existing tags)
+  // Update the Tag property to add "25/26 Member" tag (preserving existing tags)
   const response = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
     method: 'PATCH',
     headers: {
@@ -322,23 +322,8 @@ async function updateNotionWithPayment(token, sessionId, paymentIntentId, organi
     },
     body: JSON.stringify({
       properties: {
-        'Stripe Payment Intent': {
-          rich_text: [{
-            text: { content: paymentIntentId || sessionId }
-          }]
-        },
-        'Payment Status': {
-          select: {
-            name: 'Paid'
-          }
-        },
         'Tag': {
           relation: updatedTags
-        },
-        'Payment Date': {
-          date: {
-            start: new Date().toISOString()
-          }
         }
       }
     })
@@ -350,7 +335,7 @@ async function updateNotionWithPayment(token, sessionId, paymentIntentId, organi
     // Send detailed error notification for update failures
     await sendErrorNotification({
       subject: 'Stripe Webhook - Failed to Update Notion Page',
-      body: `Payment was successful but failed to update the Notion page with payment info and "25/26 Member" tag.\n\nOrganization: ${organizationName}\nNotion Page ID: ${pageId}\nStripe Session ID: ${sessionId}\nPayment Intent: ${paymentIntentId}\nHTTP Status: ${response.status}\n\nError: ${errorText}\n\nAction Required:\n1. Manually update payment status to "Paid" for ${organizationName}\n2. Manually add "25/26 Member" tag if not already present\n3. Add Stripe Payment Intent: ${paymentIntentId || sessionId}\n4. Set Payment Date to today's date`
+      body: `Payment was successful but failed to add "25/26 Member" tag to the Notion page.\n\nOrganization: ${organizationName}\nNotion Page ID: ${pageId}\nStripe Session ID: ${sessionId}\nPayment Intent: ${paymentIntentId}\nHTTP Status: ${response.status}\n\nError: ${errorText}\n\nAction Required:\nManually add "25/26 Member" tag to ${organizationName} in Notion.`
     });
 
     throw new Error(`Notion update failed: ${response.status} - ${errorText}`);
